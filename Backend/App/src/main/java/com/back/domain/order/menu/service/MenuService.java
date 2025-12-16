@@ -1,5 +1,7 @@
 package com.back.domain.order.menu.service;
 
+
+import com.back.domain.order.menu.dto.CreateMenuRequestDto;
 import com.back.domain.order.menu.dto.MenuDto;
 import com.back.domain.order.menu.entity.Menu;
 import com.back.domain.order.menu.repository.MenuRepository;
@@ -22,6 +24,8 @@ public class MenuService {
     }
 
 
-    public void createMenu(MenuDto req) {
+    public void createMenu(CreateMenuRequestDto req) {
+        Menu menu = new Menu(req.getMenuName(),req.getImageURL(),req.getPrice(),req.getCategory(),req.getEmail());
+        menuRepository.save(menu);
     }
 }

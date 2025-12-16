@@ -1,5 +1,6 @@
 package com.back.domain.order.menu.controller;
 
+import com.back.domain.order.menu.dto.CreateMenuRequestDto;
 import com.back.domain.order.menu.dto.MenuDto;
 import com.back.domain.order.menu.entity.Menu;
 import com.back.domain.order.menu.service.MenuService;
@@ -34,7 +35,7 @@ public class MenuController {
     @PostMapping("/api/menu") //추가기능
     @Transactional
     public ResponseEntity<String> createMenu(
-            @RequestBody MenuDto req
+            @RequestBody CreateMenuRequestDto req
     ) {
         menuService.createMenu(req);
         return ResponseEntity.status(HttpStatus.CREATED).body("생성 완료되었습니다.");
