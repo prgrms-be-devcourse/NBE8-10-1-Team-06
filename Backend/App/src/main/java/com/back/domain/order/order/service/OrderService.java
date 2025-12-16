@@ -28,7 +28,6 @@ public class OrderService {
 
     @Transactional
     public void createOrder(OrderDto.CreateRequest request) {
-        // 1. 고객 정보 조회 또는 생성
         Customer customer = customerRepository.findByEmail(request.email())
                 .orElseGet(() -> customerRepository.save(
                         new Customer(
@@ -39,11 +38,9 @@ public class OrderService {
                         )
                 ));
 
-        // 2. 주문 생성
         Order order = new Order(customer, LocalDateTime.now());
         orderRepository.save(order);
 
-        // 3. 주문 항목 생성
         for (OrderDto.OrderItemRequest itemRequest : request.items()) {
             Menu menu = menuRepository.findById(itemRequest.menuId())
                     .orElseThrow(() -> new IllegalArgumentException(
