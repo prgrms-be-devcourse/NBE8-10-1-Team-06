@@ -13,4 +13,14 @@ public class Menu extends BaseEntity {
     String menuName;
     String imgUrl;
     int menuPrice;
+    String category;
+    String email;
+
+    public Menu(String menuName, String imgUrl, int menuPrice, String category, String email) {
+        this.menuName = menuName;
+        this.imgUrl = imgUrl;
+        this.menuPrice = menuPrice;
+        this.category = category;
+        this.email = email;
+    }
 }
