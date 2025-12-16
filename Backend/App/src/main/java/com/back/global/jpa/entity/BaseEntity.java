@@ -16,7 +16,8 @@ import static jakarta.persistence.GenerationType.IDENTITY;
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @Getter
-public class BaseEntity {
+public abstract class BaseEntity {
+
     @Id
     @GeneratedValue(strategy = IDENTITY)
     private long id;
