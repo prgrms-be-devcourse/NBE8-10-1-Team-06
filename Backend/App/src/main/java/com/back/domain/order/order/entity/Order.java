@@ -12,8 +12,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Entity
 @Table(name = "orders")
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Order extends BaseEntity {
 
     @ManyToOne(fetch = LAZY)
@@ -21,6 +20,10 @@ public class Order extends BaseEntity {
     private Customer customer;
     
     private LocalDateTime orderTime;
+    private String password;
 
-    private String Password;
+    public Order(Customer customer, LocalDateTime orderTime) {
+        this.customer = customer;
+        this.orderTime = orderTime;
+    }
 }
