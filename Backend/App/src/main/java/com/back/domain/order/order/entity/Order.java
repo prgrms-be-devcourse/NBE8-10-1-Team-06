@@ -14,7 +14,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderEntity extends BaseEntity {
+public class Order extends BaseEntity {
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "customer_id")

@@ -1,6 +1,6 @@
 package com.back.domain.order.customer.entity;
 
-import com.back.domain.order.order.entity.OrderEntity;
+import com.back.domain.order.order.entity.Order;
 import com.back.global.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,6 +12,7 @@ import static jakarta.persistence.CascadeType.PERSIST;
 import static jakarta.persistence.CascadeType.REMOVE;
 
 @Entity
+@Table(name = "customer")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,6 +23,6 @@ public class Customer extends BaseEntity {
     private Integer postcode;
 
     @OneToMany(mappedBy = "customer", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
-    private List<OrderEntity> orders = new ArrayList<>();
+    private List<Order> orders = new ArrayList<>();
 
 }
