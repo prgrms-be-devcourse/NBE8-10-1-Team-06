@@ -18,6 +18,15 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartMap>({});
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    category: "",
+    menu_name: "",
+    price: "",
+    image: "",
+  });
 
   useEffect(() => {
     const load = async () => {
@@ -67,13 +76,76 @@ export default function Home() {
     alert("주문이 완료되었습니다");
   };
 
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      email: "",
+      category: "",
+      menu_name: "",
+      price: "",
+      image: "",
+    });
+  };
+
+  const handleFormChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/menu", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          category: formData.category,
+          menu_name: formData.menu_name,
+          price: parseInt(formData.price, 10),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("상품 추가 제안에 실패했습니다");
+      }
+
+      const data = await response.json();
+      alert(data.message || "상품 추가 제안이 접수되었습니다.");
+      handleCloseModal();
+    } catch (err) {
+      console.error(err);
+      alert("상품 추가 제안 중 오류가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-start justify-center bg-slate-100 py-12">
       <main className="flex w-[1200px] max-w-[95vw] gap-6">
         <section className="flex-1 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-slate-800">상품 목록</h2>
-            <span className="text-xs text-slate-500">임시 더미 데이터</span>
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-slate-800">상품 목록</h2>
+              <span className="text-xs text-slate-500">임시 더미 데이터</span>
+            </div>
+            <button
+              onClick={handleOpenModal}
+              className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            >
+              상품 추가 제안
+            </button>
           </div>
 
           <div className="overflow-hidden rounded-lg border border-slate-200">
@@ -215,6 +287,139 @@ export default function Home() {
           </div>
         </section>
       </main>
+
+      {/* 상품 추가 제안 모달 */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={handleCloseModal}
+        >
+          <div
+            className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-slate-800">
+                상품 추가 제안
+              </h3>
+              <button
+                onClick={handleCloseModal}
+                className="text-slate-400 transition hover:text-slate-600"
+                disabled={isSubmitting}
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <label className="block space-y-1">
+                <span className="text-sm font-medium text-slate-700">
+                  이메일
+                </span>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleFormChange}
+                  required
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
+                  placeholder="your@email.com"
+                />
+              </label>
+
+              <label className="block space-y-1">
+                <span className="text-sm font-medium text-slate-700">분류</span>
+                <input
+                  type="text"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleFormChange}
+                  required
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
+                  placeholder="분류를 입력하세요 (예: 커피콩, 식품, 의류)"
+                />
+              </label>
+
+              <label className="block space-y-1">
+                <span className="text-sm font-medium text-slate-700">
+                  제품명
+                </span>
+                <input
+                  type="text"
+                  name="menu_name"
+                  value={formData.menu_name}
+                  onChange={handleFormChange}
+                  required
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
+                  placeholder="제품명을 입력하세요"
+                />
+              </label>
+
+              <label className="block space-y-1">
+                <span className="text-sm font-medium text-slate-700">가격</span>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleFormChange}
+                  required
+                  min="0"
+                  step="1"
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
+                  placeholder="0"
+                />
+              </label>
+
+              <label className="block space-y-1">
+                <span className="text-sm font-medium text-slate-700">
+                  이미지 (선택사항)
+                </span>
+                <input
+                  type="url"
+                  name="image"
+                  value={formData.image}
+                  onChange={handleFormChange}
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
+                  placeholder="이미지 URL을 입력하세요"
+                />
+                <p className="text-xs text-slate-500">
+                  이미지 URL을 입력하거나 파일을 업로드하세요
+                </p>
+              </label>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  disabled={isSubmitting}
+                  className="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSubmitting ? "제출 중..." : "제안하기"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
