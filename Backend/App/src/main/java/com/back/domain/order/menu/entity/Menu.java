@@ -10,7 +10,19 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Menu extends BaseEntity {
+    String menuName;
+    String imgUrl;
+    String category;
+    String email;
+    int menuPrice;
 
-    private String menuName;
-    private int price;
+    public void modify(
+            String menuName,
+            int menuPrice,
+            String imageUrl
+    ) {
+        this.menuName = menuName;
+        this.menuPrice = menuPrice;
+        this.imgUrl = imageUrl;
+    }
 }

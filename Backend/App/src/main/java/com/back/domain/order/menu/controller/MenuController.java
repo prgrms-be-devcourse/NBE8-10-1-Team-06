@@ -4,6 +4,7 @@ import com.back.domain.order.menu.dto.CreateMenuRequestDto;
 import com.back.domain.order.menu.dto.MenuDto;
 import com.back.domain.order.menu.entity.Menu;
 import com.back.domain.order.menu.service.MenuService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,21 +12,44 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import static com.back.domain.order.menu.dto.MenuDto.*;
 
+@RequestMapping("/api/menu")
 @RestController
 @RequiredArgsConstructor
 public class MenuController {
     private final MenuService menuService;
 
-    @GetMapping("/api/menu")
+    @GetMapping
     @Transactional(readOnly = true)
-    public List<MenuDto> getMenus() {
+    public List<MenuListResponse> getMenus() {
         List<Menu> menus = menuService.findAll();
 
         return menus
                 .stream()
-                .map(MenuDto::new)
+                .map(MenuListResponse::new)
                 .toList();
+    }
+
+    @PutMapping("/modify/{id}")
+    public ResponseEntity<MenuModifyResponse> modifyMenu(
+            @PathVariable
+            long id,
+            @Valid
+            @RequestBody
+            MenuModifyRequest req
+    ) {
+        Menu menu = menuService
+                .findById(id).get();
+        menuService.modify(
+                menu,
+                req.menuName(),
+                req.menuPrice(),
+                req.imgUrl()
+                );
+        MenuModifyResponse rs = new MenuModifyResponse(menu);
+
+        return ResponseEntity.ok(rs);
     }
 
 

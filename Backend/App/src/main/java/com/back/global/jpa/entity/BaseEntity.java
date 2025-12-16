@@ -20,7 +20,7 @@ public abstract class BaseEntity {
 
     @Id
     @GeneratedValue(strategy = IDENTITY)
-    private Long id;
+    private long id;
 
     @CreatedDate
     private LocalDateTime createDate;
