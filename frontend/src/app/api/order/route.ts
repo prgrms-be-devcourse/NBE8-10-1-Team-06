@@ -5,7 +5,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // 요청 데이터 검증
-    if (!body.email || !body.address || !body.postalCode || !body.items || body.items.length === 0) {
+    if (
+      !body.items ||
+      !Array.isArray(body.items) ||
+      body.items.length === 0 ||
+      !body.customer ||
+      !body.customer.email ||
+      !body.customer.address ||
+      body.customer.postcode === undefined
+    ) {
       return NextResponse.json(
         { message: "필수 필드가 누락되었습니다." },
         { status: 400 }

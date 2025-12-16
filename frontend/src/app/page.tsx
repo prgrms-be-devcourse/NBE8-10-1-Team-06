@@ -5,8 +5,20 @@ import { useEffect, useMemo, useState } from "react";
 type Product = {
   id: string;
   name: string;
-  subtitle: string;
+  subtitle?: string;
+  category?: string;
   price: number;
+  img_url?: string;
+};
+
+type MenuApiResponse = {
+  items: Array<{
+    menu_id: number;
+    category: string;
+    menu_name: string;
+    menu_price: number;
+    img_url: string;
+  }>;
 };
 
 type CartMap = Record<string, number>;
@@ -37,12 +49,36 @@ export default function Home() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("/api/products", { cache: "no-store" });
-        if (!res.ok) throw new Error("상품을 불러오지 못했습니다");
-        const data: Product[] = await res.json();
-        setProducts(data);
+        // 먼저 백엔드 API에서 메뉴 데이터 가져오기 시도
+        const res = await fetch("http://localhost:8080/api/menu", {
+          cache: "no-store",
+        });
+        
+        if (res.ok) {
+          const apiData: MenuApiResponse = await res.json();
+          // API 응답을 Product 형식으로 변환
+          const convertedProducts: Product[] = apiData.items.map((item) => ({
+            id: item.menu_id.toString(),
+            name: item.menu_name,
+            category: item.category,
+            price: item.menu_price,
+            img_url: item.img_url,
+          }));
+          setProducts(convertedProducts);
+        } else {
+          throw new Error("백엔드 API 호출 실패");
+        }
       } catch (err) {
-        console.error(err);
+        console.error("백엔드 API 호출 실패, 더미 데이터 사용:", err);
+        // 백엔드 API 호출 실패 시 더미 데이터 사용
+        try {
+          const res = await fetch("/api/products", { cache: "no-store" });
+          if (!res.ok) throw new Error("상품을 불러오지 못했습니다");
+          const data: Product[] = await res.json();
+          setProducts(data);
+        } catch (fallbackErr) {
+          console.error("더미 데이터 로드 실패:", fallbackErr);
+        }
       } finally {
         setLoading(false);
       }
@@ -57,10 +93,15 @@ export default function Home() {
 
   const removeFromCart = (id: string) => {
     setCart((prev) => {
-      if (!prev[id]) return prev;
-      const next = { ...prev };
-      delete next[id];
-      return next;
+      const current = prev[id] ?? 0;
+      if (current <= 1) {
+        // 1개 이하일 때는 장바구니에서 제거
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      // 그 외에는 수량만 1 감소
+      return { ...prev, [id]: current - 1 };
     });
   };
 
@@ -78,8 +119,18 @@ export default function Home() {
 
   const selectedItems = products.filter((product) => cart[product.id]);
 
+  const isValidEmail = (email: string) => {
+    // 매우 단순한 이메일 형식 검사
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   const handleCheckout = async () => {
     if (selectedItems.length === 0) return;
+
+    if (!orderForm.email || !isValidEmail(orderForm.email)) {
+      alert("유효한 이메일 주소를 입력해주세요.");
+      return;
+    }
 
     setIsCheckoutLoading(true);
     try {
@@ -89,14 +140,15 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: orderForm.email,
-          address: orderForm.address,
-          postalCode: orderForm.postalCode,
           items: selectedItems.map((item) => ({
-            productId: item.id,
-            quantity: cart[item.id],
+            menu_id: Number(item.id),
+            menu_count: cart[item.id],
           })),
-          totalPrice: totalPrice,
+          customer: {
+            email: orderForm.email,
+            postcode: parseInt(orderForm.postalCode, 10),
+            address: orderForm.address,
+          },
         }),
       });
 
@@ -177,11 +229,10 @@ export default function Home() {
     <div className="flex min-h-screen items-start justify-center bg-slate-100 py-12">
       <main className="flex w-[1200px] max-w-[95vw] gap-6">
         <section className="flex-1 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-slate-800">상품 목록</h2>
-              <span className="text-xs text-slate-500">임시 더미 데이터</span>
-            </div>
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-slate-800">상품 목록</h2>
+              </div>
             <button
               onClick={handleOpenModal}
               className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
@@ -194,10 +245,10 @@ export default function Home() {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>
-                  <th className="w-16 px-4 py-3">이미지</th>
+                  <th className="w-20 px-4 py-3">이미지</th>
                   <th className="px-4 py-3">상품명</th>
                   <th className="w-28 px-4 py-3 text-right">가격</th>
-                  <th className="w-28 px-4 py-3 text-center">Action</th>
+                  <th className="w-32 px-4 py-3 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -211,29 +262,45 @@ export default function Home() {
                   products.map((product) => (
                     <tr key={product.id} className="hover:bg-slate-50/80">
                       <td className="px-4 py-3">
-                        <div className="h-14 w-14 rounded-md border border-slate-200 bg-gradient-to-br from-slate-100 to-slate-200 shadow-inner" />
+                        {product.img_url ? (
+                          <img
+                            src={product.img_url}
+                            alt={product.name}
+                            className="h-14 w-14 rounded-md border border-slate-200 object-cover shadow-inner"
+                            onError={(e) => {
+                              // 이미지 로드 실패 시 기본 div로 대체
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                            }}
+                          />
+                        ) : null}
+                        {!product.img_url && (
+                          <div className="h-14 w-14 rounded-md border border-slate-200 bg-gradient-to-br from-slate-100 to-slate-200 shadow-inner" />
+                        )}
                       </td>
                       <td className="px-4 py-3 align-top">
                         <div className="text-sm font-semibold text-slate-800">
                           {product.name}
                         </div>
-                        <div className="text-xs text-slate-500">
-                          {product.subtitle}
-                        </div>
+                        {(product.subtitle || product.category) && (
+                          <div className="text-xs text-slate-500">
+                            {product.subtitle || product.category}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right font-semibold text-slate-800">
                         {formatPrice(product.price)}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-2 whitespace-nowrap">
                           <button
-                            className="rounded-md border border-emerald-600 px-3 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-600 hover:text-white"
+                            className="rounded-md border border-emerald-600 px-3 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-600 hover:text-white whitespace-nowrap"
                             onClick={() => addToCart(product.id)}
                           >
                             추가
                           </button>
                           <button
-                            className="rounded-md border border-rose-500 px-3 py-1 text-xs font-semibold text-rose-600 transition hover:bg-rose-500 hover:text-white"
+                            className="rounded-md border border-rose-500 px-3 py-1 text-xs font-semibold text-rose-600 transition hover:bg-rose-500 hover:text-white whitespace-nowrap"
                             onClick={() => removeFromCart(product.id)}
                           >
                             삭제
