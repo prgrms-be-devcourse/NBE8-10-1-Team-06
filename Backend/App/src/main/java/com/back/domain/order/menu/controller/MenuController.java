@@ -25,7 +25,6 @@ public class MenuController {
     @Transactional(readOnly = true)
     public List<MenuListResponse> getMenus() {
         List<Menu> menus = menuService.findAll();
-
         return menus
                 .stream()
                 .map(MenuListResponse::new)
@@ -69,7 +68,6 @@ public class MenuController {
             @PathVariable Long menu_id,
             @RequestBody @Valid DeleteMenuRequestDto req
     ) {
-        //TODO : 삭제 로직 구현
         req.setMenuId(menu_id);
 
         boolean ok = menuService.deleteMenu(req);

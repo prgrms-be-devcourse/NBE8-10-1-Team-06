@@ -46,7 +46,6 @@ public class MenuService {
 
     // 삭제 성공 시 True, 아니면 False return
     public boolean deleteMenu(DeleteMenuRequestDto req) {
-        //TODO : 삭제 로직 구현
         if (req.getMenuId() == null || req.getEmail() == null) return false;
         return menuRepository.deleteByIdAndEmail(req.getMenuId(), req.getEmail()) == 1;
     }

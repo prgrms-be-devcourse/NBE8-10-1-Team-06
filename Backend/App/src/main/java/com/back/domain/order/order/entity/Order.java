@@ -21,4 +21,6 @@ public class Order extends BaseEntity {
     private Customer customer;
     
     private LocalDateTime orderTime;
+
+    private String Password;
 }
