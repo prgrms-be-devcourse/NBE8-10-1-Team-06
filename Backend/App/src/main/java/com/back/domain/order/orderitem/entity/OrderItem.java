@@ -1,12 +1,9 @@
 package com.back.domain.order.orderitem.entity;
 
+import com.back.domain.order.menu.entity.menu;
 import com.back.domain.order.order.entity.OrderEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-import java.awt.*;
+import lombok.*;
 
 import static jakarta.persistence.FetchType.LAZY;
 
@@ -20,10 +17,12 @@ public class OrderItem {
     private Long orderItemId;
 
     @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "order_id")
     private OrderEntity order;
 
     @ManyToOne(fetch = LAZY)
-    private Menu menu;
+    @JoinColumn(name = "menu_id")
+    private menu menu;
 
     private int count;
 }

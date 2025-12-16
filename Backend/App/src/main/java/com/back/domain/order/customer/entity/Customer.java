@@ -13,7 +13,7 @@ import static jakarta.persistence.CascadeType.REMOVE;
 
 @Entity
 @Getter
-@NoArgsConstructor()
+@NoArgsConstructor
 @AllArgsConstructor
 public class Customer extends BaseEntity {
 
@@ -24,7 +24,7 @@ public class Customer extends BaseEntity {
     private String address;
     private Integer postcode;
 
-    @OneToMany(mappedBy = "order", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
     private List<OrderEntity> orders = new ArrayList<>();
 
 }
