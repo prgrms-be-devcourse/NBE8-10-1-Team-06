@@ -1,8 +1,8 @@
 package com.back.domain.order.menu.repository;
 
 
-import com.back.domain.order.menu.entity.menu;
+import com.back.domain.order.menu.entity.Menu;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface MenuRepository extends JpaRepository<menu, Long> {
+public interface MenuRepository extends JpaRepository<Menu, Long> {
 }

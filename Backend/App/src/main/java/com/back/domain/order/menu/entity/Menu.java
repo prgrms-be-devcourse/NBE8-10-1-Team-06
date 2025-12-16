@@ -9,7 +9,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class menu extends BaseEntity {
+public class Menu extends BaseEntity {
 
     private String menuName;
     private int price;

@@ -1,13 +1,24 @@
 package com.back.domain.order.order.dto;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+import java.util.List;
 
 public class OrderDto {
 
     public record CreateRequest(
-            String email,
-            String address,
-            Integer postcode
+            @NotBlank @Email String email,
+            @NotBlank String address,
+            @NotNull Integer postcode,
+            @NotNull List<OrderItemRequest> items
     ) {}
+
+    public record OrderItemRequest(
+            @NotNull Long menuId,
+            @NotNull Integer count
+    ) {}
+
+    public record CreateResponse(String message) {}
 }

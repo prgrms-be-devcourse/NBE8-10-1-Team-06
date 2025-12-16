@@ -1,6 +1,6 @@
 package com.back.domain.order.orderitem.entity;
 
-import com.back.domain.order.menu.entity.menu;
+import com.back.domain.order.menu.entity.Menu;
 import com.back.domain.order.order.entity.Order;
 import com.back.global.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -21,7 +21,7 @@ public class OrderItem extends BaseEntity {
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "menu_id")
-    private menu menu;
+    private Menu menu;
 
     private int count;
 }
