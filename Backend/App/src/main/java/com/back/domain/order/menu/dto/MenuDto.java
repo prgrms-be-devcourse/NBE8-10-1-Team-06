@@ -2,6 +2,8 @@ package com.back.domain.order.menu.dto;
 
 import com.back.domain.order.menu.entity.Menu;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 
 
 public class MenuDto {
@@ -28,12 +30,15 @@ public class MenuDto {
         }
     }
 
+
     public record MenuModifyRequest(
             @JsonProperty("menu_id")
             Long menuId,
+            @NotBlank(message = "메뉴 이름을 입력하세요.")
             @JsonProperty("menu_name")
             String menuName,
-            @JsonProperty("menu_price")
+            @Positive(message = "가격은 0보다 커야 합니다.")
+            @JsonProperty("price")
             int menuPrice,
             @JsonProperty("img_url")
             String imgUrl
@@ -44,7 +49,7 @@ public class MenuDto {
             long menuId,
             @JsonProperty("menu_name")
             String menuName,
-            @JsonProperty("menu_price")
+            @JsonProperty("price")
             int menuPrice
     ) {
         public MenuModifyResponse(Menu menu) {
