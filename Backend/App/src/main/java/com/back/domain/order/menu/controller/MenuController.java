@@ -8,10 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -41,7 +38,17 @@ public class MenuController {
         return ResponseEntity.status(HttpStatus.CREATED).body("생성 완료되었습니다.");
     }
 
+    @DeleteMapping("/api/menu/delete/{menu_id}")
+    @Transactional
+    public ResponseEntity<String> deleteMenu(
+            @PathVariable Long menu_id
+    ) {
+        //TODO : 삭제 로직 구현
 
-
-
+        if (true) { //validation 통과
+            return ResponseEntity.status(HttpStatus.OK).body("삭제되었습니다.");
+        }
+        // validation 실패
+         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("이메일이 잘못되었거나 삭제 권한이 없습니다.");
+    }
 }
