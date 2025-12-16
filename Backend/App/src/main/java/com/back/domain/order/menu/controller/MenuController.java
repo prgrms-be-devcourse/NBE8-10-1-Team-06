@@ -15,7 +15,7 @@ import java.util.List;
 public class MenuController {
     private final MenuService menuService;
 
-    @GetMapping
+    @GetMapping("/api/menu")
     @Transactional(readOnly = true)
     public List<MenuDto> getMenus() {
         List<Menu> menus = menuService.findAll();
