@@ -20,12 +20,18 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     category: "",
     menu_name: "",
     price: "",
     image: "",
+  });
+  const [orderForm, setOrderForm] = useState({
+    email: "",
+    address: "",
+    postalCode: "",
   });
 
   useEffect(() => {
@@ -72,8 +78,44 @@ export default function Home() {
 
   const selectedItems = products.filter((product) => cart[product.id]);
 
-  const handleCheckout = () => {
-    alert("주문이 완료되었습니다");
+  const handleCheckout = async () => {
+    if (selectedItems.length === 0) return;
+
+    setIsCheckoutLoading(true);
+    try {
+      const response = await fetch("/api/order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: orderForm.email,
+          address: orderForm.address,
+          postalCode: orderForm.postalCode,
+          items: selectedItems.map((item) => ({
+            productId: item.id,
+            quantity: cart[item.id],
+          })),
+          totalPrice: totalPrice,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // 성공 응답은 빈 객체 {}
+        alert("주문이 완료되었습니다");
+        setCart({});
+        setOrderForm({ email: "", address: "", postalCode: "" });
+      } else {
+        const error = await response.json();
+        alert(error.message || "주문 처리 중 오류가 발생했습니다.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("주문 처리 중 오류가 발생했습니다.");
+    } finally {
+      setIsCheckoutLoading(false);
+    }
   };
 
   const handleOpenModal = () => {
@@ -236,6 +278,10 @@ export default function Home() {
               <span className="text-slate-600">이메일</span>
               <input
                 type="email"
+                value={orderForm.email}
+                onChange={(e) =>
+                  setOrderForm((prev) => ({ ...prev, email: e.target.value }))
+                }
                 className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
                 placeholder="your@email.com"
               />
@@ -244,6 +290,10 @@ export default function Home() {
               <span className="text-slate-600">주소</span>
               <input
                 type="text"
+                value={orderForm.address}
+                onChange={(e) =>
+                  setOrderForm((prev) => ({ ...prev, address: e.target.value }))
+                }
                 className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
                 placeholder="주소를 입력하세요"
               />
@@ -252,6 +302,13 @@ export default function Home() {
               <span className="text-slate-600">우편번호</span>
               <input
                 type="text"
+                value={orderForm.postalCode}
+                onChange={(e) =>
+                  setOrderForm((prev) => ({
+                    ...prev,
+                    postalCode: e.target.value,
+                  }))
+                }
                 className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
                 placeholder="00000"
               />
@@ -277,9 +334,9 @@ export default function Home() {
           <button
             onClick={handleCheckout}
             className="mt-4 w-full rounded-md bg-slate-900 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-            disabled={selectedItems.length === 0}
+            disabled={selectedItems.length === 0 || isCheckoutLoading}
           >
-            결제하기
+            {isCheckoutLoading ? "처리 중..." : "결제하기"}
           </button>
 
           <div className="mt-6 rounded-md border border-dashed border-slate-300 bg-white p-3 text-xs text-slate-600">
