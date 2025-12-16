@@ -18,12 +18,12 @@ public class MenuController {
 
     @GetMapping("/api/menu")
     @Transactional(readOnly = true)
-    public List<MenuReadResponse> getMenus() {
+    public List<MenuListResponse> getMenus() {
         List<Menu> menus = menuService.findAll();
 
         return menus
                 .stream()
-                .map(MenuReadResponse::new)
+                .map(MenuListResponse::new)
                 .toList();
     }
 
