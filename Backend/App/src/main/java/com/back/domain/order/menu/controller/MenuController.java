@@ -1,9 +1,11 @@
 package com.back.domain.order.menu.controller;
 
 import com.back.domain.order.menu.dto.CreateMenuRequestDto;
+import com.back.domain.order.menu.dto.DeleteMenuRequestDto;
 import com.back.domain.order.menu.dto.MenuDto;
 import com.back.domain.order.menu.entity.Menu;
 import com.back.domain.order.menu.service.MenuService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,9 +43,13 @@ public class MenuController {
     @DeleteMapping("/api/menu/delete/{menu_id}")
     @Transactional
     public ResponseEntity<String> deleteMenu(
-            @PathVariable Long menu_id
+            @PathVariable Long menu_id,
+            @RequestBody @Valid DeleteMenuRequestDto req
     ) {
         //TODO : 삭제 로직 구현
+        req.setMenuId(menu_id);
+
+        boolean ok = menuService.deleteMenu(req);
 
         if (true) { //validation 통과
             return ResponseEntity.status(HttpStatus.OK).body("삭제되었습니다.");
