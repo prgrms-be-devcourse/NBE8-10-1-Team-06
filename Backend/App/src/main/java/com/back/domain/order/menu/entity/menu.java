@@ -1,5 +1,6 @@
 package com.back.domain.order.menu.entity;
 
+import com.back.global.jpa.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,11 +11,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class menu {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long menuId;
+public class menu extends BaseEntity {
 
     private String menuName;
     private int price;

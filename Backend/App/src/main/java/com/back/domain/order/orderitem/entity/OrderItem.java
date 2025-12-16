@@ -2,6 +2,7 @@ package com.back.domain.order.orderitem.entity;
 
 import com.back.domain.order.menu.entity.menu;
 import com.back.domain.order.order.entity.OrderEntity;
+import com.back.global.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,10 +12,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderItem {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long orderItemId;
+public class OrderItem extends BaseEntity {
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "order_id")

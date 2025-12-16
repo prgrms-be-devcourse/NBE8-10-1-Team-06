@@ -17,9 +17,6 @@ import static jakarta.persistence.CascadeType.REMOVE;
 @AllArgsConstructor
 public class Customer extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long customerId;
     private String email;
     private String address;
     private Integer postcode;
