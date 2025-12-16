@@ -1,22 +1,24 @@
 package com.back.domain.order.order.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.NotNull;
+
+import java.util.List;
 
 public class OrderDto {
-    public record CreateOrderRequest(
-            @NotBlank String email,
-            @NotBlank String category,
-            @JsonProperty("menu_name") @NotBlank String menuName,
-            @Positive int price
+
+    public record CreateRequest(
+            @NotBlank @Email String email,
+            @NotBlank String address,
+            @NotNull Integer postcode,
+            @NotNull List<OrderItemRequest> items
     ) {}
 
-    public record CreateOrderResponse(
-            Long menuId,
-            String email,
-            String category,
-            @JsonProperty("menu_name") String menuName,
-            int price
+    public record OrderItemRequest(
+            @NotNull Long menuId,
+            @NotNull Integer count
     ) {}
+
+    public record CreateResponse(String message) {}
 }
