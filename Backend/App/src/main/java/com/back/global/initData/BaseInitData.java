@@ -45,13 +45,13 @@ public class BaseInitData {
         if (customerRepository.count() > 0) return;
 
         // Menu
-        Menu menu1 = new Menu("아메리카노", 4500);
+        Menu menu1 = new Menu("아메리카노","tmpImgURL", 4500,"음료","example@example.com");
         menuRepository.save(menu1);
 
-        Menu menu2 = new Menu("카페라떼", 5000);
+        Menu menu2 = new Menu("카페라떼","tmpImgURL", 5000, "음료","example@example.com");
         menuRepository.save(menu2);
 
-        Menu menu3 = new Menu("카푸치노", 5500);
+        Menu menu3 = new Menu("카푸치노","tmpImgURL", 5500, "음료","example@example.com");
         menuRepository.save(menu3);
     }
 

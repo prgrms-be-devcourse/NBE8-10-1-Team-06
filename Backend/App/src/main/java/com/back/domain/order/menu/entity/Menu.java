@@ -2,6 +2,8 @@ package com.back.domain.order.menu.entity;
 
 import com.back.global.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
@@ -10,11 +12,15 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Menu extends BaseEntity {
+    @NotNull
     String menuName;
     String imgUrl;
-    String category;
-    String email;
+    @NotNull
     int menuPrice;
+    @NotNull
+    String category;
+    @NotNull
+    String email;
 
     public void modify(
             String menuName,
