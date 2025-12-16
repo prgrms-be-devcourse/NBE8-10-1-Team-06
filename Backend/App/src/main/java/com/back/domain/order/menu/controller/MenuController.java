@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import static com.back.domain.order.menu.dto.MenuDto.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,12 +18,13 @@ public class MenuController {
 
     @GetMapping("/api/menu")
     @Transactional(readOnly = true)
-    public List<MenuDto> getMenus() {
+    public List<MenuReadResponse> getMenus() {
         List<Menu> menus = menuService.findAll();
 
         return menus
                 .stream()
-                .map(MenuDto::new)
+                .map(MenuReadResponse::new)
                 .toList();
     }
+
 }

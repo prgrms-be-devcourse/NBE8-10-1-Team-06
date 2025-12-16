@@ -12,5 +12,6 @@ import lombok.NoArgsConstructor;
 public class Menu extends BaseEntity {
     String menuName;
     String imgUrl;
+    String category;
     int menuPrice;
 }
