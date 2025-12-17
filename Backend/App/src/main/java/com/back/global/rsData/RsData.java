@@ -1,10 +1,11 @@
 package com.back.global.rsData;
 
 public record RsData<T>(
-    String message,
-    T data
+        String resultCode,
+        String message,
+        T data
 ) {
-    public RsData(String message) {
-        this(message, null);
+    public RsData(String resultCode, String message) {
+        this(resultCode, message, null);
     }
 }

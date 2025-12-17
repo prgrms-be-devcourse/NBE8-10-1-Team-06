@@ -49,7 +49,11 @@ public class MenuController {
                 req.imgUrl(),
                 req.category()
                 );
-        RsData<MenuModifyResponse> rs = new RsData<>("메뉴를 수정하였습니다.", new MenuModifyResponse(menu));
+        RsData<MenuModifyResponse> rs = new RsData<>(
+                "200-1",
+                "메뉴를 수정하였습니다.",
+                new MenuModifyResponse(menu)
+        );
 
         return ResponseEntity.ok(rs);
 

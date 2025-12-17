@@ -25,9 +25,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<RsData<Void>> handleException(NoSuchElementException ex) {
         return new ResponseEntity<>(
                 new RsData<>(
-                "해당 데이터가 존재하지 않습니다."
-        ),
-        NOT_FOUND
+                        "404-1",
+                        "해당 데이터가 존재하지 않습니다."
+                ),
+                NOT_FOUND
         );
     }
 
@@ -45,6 +46,7 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(
                 new RsData<>(
+                        "400-1",
                         message
                 ),
                 BAD_REQUEST
@@ -55,6 +57,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<RsData<Void>> handleException(HttpMessageNotReadableException ex) {
         return new ResponseEntity<>(
                 new RsData<>(
+                        "400-1",
                         "요청 본문이 올바르지 않습니다."
                 ),
                 BAD_REQUEST
