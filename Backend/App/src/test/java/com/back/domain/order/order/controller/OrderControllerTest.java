@@ -321,4 +321,38 @@ public class OrderControllerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("주문 생성 성공 - 여러 개의 다른 메뉴 주문")
+    void createOrder_MultipleMenus_Success() throws Exception {
+        String requestBody = String.format("""
+                {
+                    "email": "multi@test.com",
+                    "address": "서울시 종로구",
+                    "postcode": 11111,
+                    "items": [
+                        {
+                            "menuId": %d,
+                            "count": 1
+                        },
+                        {
+                            "menuId": %d,
+                            "count": 2
+                        }
+                    ]
+                }
+                """, menu1Id, menu2Id);
+
+        mvc.perform(post("/api/order")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("주문이 성공적으로 등록되었습니다."));
+
+        List<OrderItem> orderItems = orderItemRepository.findAll();
+        assertThat(orderItems).hasSize(2);
+        assertThat(orderItems).extracting("count")
+                .containsExactlyInAnyOrder(1, 2);
+    }
 }
