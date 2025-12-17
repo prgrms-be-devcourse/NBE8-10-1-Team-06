@@ -275,4 +275,28 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$.resultCode").value("400-1"))
                 .andExpect(jsonPath("$.msg").value("존재하지 않는 메뉴입니다: 999999"));
     }
+
+    @Test
+    @DisplayName("주문 생성 실패 - 메뉴 ID 누락")
+    void t9() throws Exception {
+        String requestBody = """
+                {
+                    "email": "test@test.com",
+                    "address": "서울시 강남구",
+                    "postcode": 12345,
+                    "items": [
+                        {
+                            "count": 2
+                        }
+                    ]
+                }
+                """;
+
+        mvc.perform(post("/api/order")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
 }
