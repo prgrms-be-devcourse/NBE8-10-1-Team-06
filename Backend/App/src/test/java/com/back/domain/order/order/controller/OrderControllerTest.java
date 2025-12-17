@@ -299,4 +299,26 @@ public class OrderControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    @DisplayName("주문 생성 실패 - 수량 누락")
+    void t10() throws Exception {
+        String requestBody = String.format("""
+                {
+                    "email": "test@test.com",
+                    "address": "서울시 강남구",
+                    "postcode": 12345,
+                    "items": [
+                        {
+                            "menuId": %d
+                        }
+                    ]
+                }
+                """, menu1Id);
+
+        mvc.perform(post("/api/order")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
 }
