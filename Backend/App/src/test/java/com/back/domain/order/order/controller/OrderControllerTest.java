@@ -231,4 +231,22 @@ public class OrderControllerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("주문 생성 실패 - 주문 아이템 누락")
+    void createOrder_MissingItems_Fail() throws Exception {
+        String requestBody = """
+                {
+                    "email": "test@test.com",
+                    "address": "서울시 강남구",
+                    "postcode": 12345
+                }
+                """;
+
+        mvc.perform(post("/api/order")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
 }
