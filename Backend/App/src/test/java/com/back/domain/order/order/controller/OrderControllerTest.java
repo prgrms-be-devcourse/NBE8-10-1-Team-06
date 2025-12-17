@@ -7,10 +7,7 @@ import com.back.domain.order.order.repository.OrderRepository;
 import com.back.domain.order.order.service.OrderService;
 import com.back.domain.order.customer.entity.Customer;
 import com.back.domain.order.customer.repository.CustomerRepository;
-import com.back.domain.order.menu.entity.Menu;
-import com.back.domain.order.menu.repository.MenuRepository;
 import com.back.domain.order.order.entity.Order;
-import com.back.domain.order.order.repository.OrderRepository;
 import com.back.domain.order.orderitem.entity.OrderItem;
 import com.back.domain.order.orderitem.repository.OrderItemRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,17 +23,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -52,7 +44,7 @@ public class OrderControllerTest {
     private WebApplicationContext context;
 
     @Autowired
-    private MenuRepository menuRepository
+    private MenuRepository menuRepository;
 
     @Autowired
     private CustomerRepository customerRepository;
@@ -163,7 +155,6 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$.orders[0].menuPrice").value(expected.orders().get(0).menuPrice()))
                 .andExpect(jsonPath("$.orders[0].count").value(expected.orders().get(0).count()));
     }
-}
 
     private Long menu1Id;
     private Long menu2Id;
