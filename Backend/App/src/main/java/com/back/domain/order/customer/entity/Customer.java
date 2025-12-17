@@ -18,11 +18,15 @@ import static jakarta.persistence.CascadeType.REMOVE;
 @AllArgsConstructor
 public class Customer extends BaseEntity {
 
+    @Column(unique = true)
     private String email;
-    private String address;
-    private Integer postcode;
 
     @OneToMany(mappedBy = "customer", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
+
+    public Customer(String email) {
+        this.email = email;
+        this.orders = new ArrayList<>();
+    }
 
 }

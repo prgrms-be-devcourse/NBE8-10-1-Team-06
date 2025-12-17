@@ -21,15 +21,20 @@ public class Order extends BaseEntity {
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "customer_id")
     private Customer customer;
-    
+
     private LocalDateTime orderTime;
+
+    private String address;
+    private int postcode;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    public Order(Customer customer, LocalDateTime orderTime) {
+    public Order(Customer customer, LocalDateTime orderTime, String address, int postcode) {
         setCustomer(customer);
         this.orderTime = orderTime;
+        this.address = address;
+        this.postcode = postcode;
     }
 
     public void setCustomer(Customer customer) {
