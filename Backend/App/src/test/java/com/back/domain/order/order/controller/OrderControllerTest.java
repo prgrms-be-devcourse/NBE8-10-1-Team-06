@@ -103,7 +103,7 @@ public class OrderControllerTest {
 
     @Test
     @DisplayName("주문 생성 성공 - 기존 고객")
-    void createOrder_ExistingCustomer_Success() throws Exception {
+    void t2() throws Exception {
         Customer existingCustomer = customerRepository.save(
                 new Customer("existing@test.com"));
 
@@ -141,7 +141,7 @@ public class OrderControllerTest {
 
     @Test
     @DisplayName("주문 생성 실패 - 이메일 누락")
-    void createOrder_MissingEmail_Fail() throws Exception {
+    void t3() throws Exception {
         String requestBody = String.format("""
                 {
                     "address": "서울시 강남구",
@@ -164,7 +164,7 @@ public class OrderControllerTest {
 
     @Test
     @DisplayName("주문 생성 실패 - 유효하지 않은 이메일 형식")
-    void createOrder_InvalidEmail_Fail() throws Exception {
+    void t4() throws Exception {
         String requestBody = String.format("""
                 {
                     "email": "invalidemail",
@@ -188,7 +188,7 @@ public class OrderControllerTest {
 
     @Test
     @DisplayName("주문 생성 실패 - 주소 누락")
-    void createOrder_MissingAddress_Fail() throws Exception {
+    void t5() throws Exception {
         String requestBody = String.format("""
                 {
                     "email": "test@test.com",
@@ -211,7 +211,7 @@ public class OrderControllerTest {
 
     @Test
     @DisplayName("주문 생성 실패 - 우편번호 누락")
-    void createOrder_MissingPostcode_Fail() throws Exception {
+    void t6() throws Exception {
         String requestBody = String.format("""
                 {
                     "email": "test@test.com",
@@ -234,7 +234,7 @@ public class OrderControllerTest {
 
     @Test
     @DisplayName("주문 생성 실패 - 주문 아이템 누락")
-    void createOrder_MissingItems_Fail() throws Exception {
+    void t7() throws Exception {
         String requestBody = """
                 {
                     "email": "test@test.com",
@@ -248,5 +248,31 @@ public class OrderControllerTest {
                         .content(requestBody))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("주문 생성 실패 - 존재하지 않는 메뉴")
+    void t8() throws Exception {
+        String requestBody = """
+                {
+                    "email": "test@test.com",
+                    "address": "서울시 강남구",
+                    "postcode": 12345,
+                    "items": [
+                        {
+                            "menuId": 999999,
+                            "count": 2
+                        }
+                    ]
+                }
+                """;
+
+        mvc.perform(post("/api/order")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultCode").value("400-1"))
+                .andExpect(jsonPath("$.msg").value("존재하지 않는 메뉴입니다: 999999"));
     }
 }
