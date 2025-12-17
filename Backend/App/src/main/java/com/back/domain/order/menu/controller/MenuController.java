@@ -41,9 +41,7 @@ public class MenuController {
             MenuModifyRequest req
     ) {
         Menu menu = menuService
-                .findById(id).orElseThrow(() -> new IllegalArgumentException(
-                        "존재하지 않는 메뉴입니다: %d".formatted(id)
-                ));
+                .findById(id).get();
         menuService.modify(
                 menu,
                 req.menuName(),
