@@ -95,10 +95,11 @@ public class MenuControllerTest {
                 .andExpect(handler().handlerType(MenuController.class))
                 .andExpect(handler().methodName("modifyMenu"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.menu_id").value(2))
-                .andExpect(jsonPath("$.menu_name").value("쿨라임 피지오"))
-                .andExpect(jsonPath("$.price").value(3000))
-                .andExpect(jsonPath("$.category").value("피지오"));
+                .andExpect(jsonPath("$.message").value("메뉴를 수정하였습니다."))
+                .andExpect(jsonPath("$.data.menu_id").value(2))
+                .andExpect(jsonPath("$.data.menu_name").value("쿨라임 피지오"))
+                .andExpect(jsonPath("$.data.price").value(3000))
+                .andExpect(jsonPath("$.data.category").value("피지오"));
 
 
     }

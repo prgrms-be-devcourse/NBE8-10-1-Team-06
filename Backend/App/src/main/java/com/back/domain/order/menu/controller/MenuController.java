@@ -5,6 +5,7 @@ import com.back.domain.order.menu.dto.DeleteMenuRequestDto;
 import com.back.domain.order.menu.dto.MenuDto;
 import com.back.domain.order.menu.entity.Menu;
 import com.back.domain.order.menu.service.MenuService;
+import com.back.global.rsData.RsData;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,7 +33,7 @@ public class MenuController {
     }
 
     @PutMapping("/modify/{id}")
-    public ResponseEntity<MenuModifyResponse> modifyMenu(
+    public ResponseEntity<RsData<MenuModifyResponse>> modifyMenu(
             @PathVariable
             long id,
             @Valid
@@ -40,7 +41,9 @@ public class MenuController {
             MenuModifyRequest req
     ) {
         Menu menu = menuService
-                .findById(id).get();
+                .findById(id).orElseThrow(() -> new IllegalArgumentException(
+                        "존재하지 않는 메뉴입니다: %d".formatted(id)
+                ));
         menuService.modify(
                 menu,
                 req.menuName(),
@@ -48,9 +51,10 @@ public class MenuController {
                 req.imgUrl(),
                 req.category()
                 );
-        MenuModifyResponse rs = new MenuModifyResponse(menu);
+        RsData<MenuModifyResponse> rs = new RsData<>("메뉴를 수정하였습니다.", new MenuModifyResponse(menu));
 
         return ResponseEntity.ok(rs);
+
     }
 
 
