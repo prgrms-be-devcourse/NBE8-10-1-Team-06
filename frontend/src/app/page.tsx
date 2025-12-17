@@ -124,11 +124,21 @@ export default function Home() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
+  const isValidPostcode = (postcode: string) => {
+    // 숫자 5자리 검사
+    return /^\d{5}$/.test(postcode);
+  };
+
   const handleCheckout = async () => {
     if (selectedItems.length === 0) return;
 
     if (!orderForm.email || !isValidEmail(orderForm.email)) {
       alert("유효한 이메일 주소를 입력해주세요.");
+      return;
+    }
+
+    if (!orderForm.postalCode || !isValidPostcode(orderForm.postalCode)) {
+      alert("우편번호는 숫자 5자리로 입력해주세요.");
       return;
     }
 
@@ -233,12 +243,6 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-slate-800">상품 목록</h2>
               </div>
-            <button
-              onClick={handleOpenModal}
-              className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
-            >
-              상품 추가 제안
-            </button>
           </div>
 
           <div className="overflow-hidden rounded-lg border border-slate-200">
@@ -370,12 +374,15 @@ export default function Home() {
               <input
                 type="text"
                 value={orderForm.postalCode}
-                onChange={(e) =>
+                onChange={(e) => {
+                  // 숫자만 입력 허용
+                  const value = e.target.value.replace(/\D/g, "");
                   setOrderForm((prev) => ({
                     ...prev,
-                    postalCode: e.target.value,
-                  }))
-                }
+                    postalCode: value,
+                  }));
+                }}
+                maxLength={5}
                 className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
                 placeholder="00000"
               />
@@ -406,9 +413,6 @@ export default function Home() {
             {isCheckoutLoading ? "처리 중..." : "결제하기"}
           </button>
 
-          <div className="mt-6 rounded-md border border-dashed border-slate-300 bg-white p-3 text-xs text-slate-600">
-            서버 REST API 연동 준비: 현재는 /api/products에서 더미 데이터를 받아옵니다.
-          </div>
         </section>
       </main>
 
