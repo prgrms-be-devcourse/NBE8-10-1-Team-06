@@ -14,7 +14,7 @@ public class MenuDto {
             String category,
             @JsonProperty("menu_name")
             String menuName,
-            @JsonProperty("menu_price")
+            @JsonProperty("price")
             int menuPrice,
             @JsonProperty("img_url")
             String imgUrl
