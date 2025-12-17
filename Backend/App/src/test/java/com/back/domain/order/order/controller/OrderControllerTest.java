@@ -187,4 +187,29 @@ public class OrderControllerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("주문 생성 실패 - 주소 누락")
+    void createOrder_MissingAddress_Fail() throws Exception {
+        // given
+        String requestBody = String.format("""
+                {
+                    "email": "test@test.com",
+                    "postcode": 12345,
+                    "items": [
+                        {
+                            "menuId": %d,
+                            "count": 2
+                        }
+                    ]
+                }
+                """, menu1Id);
+
+        // when & then
+        mvc.perform(post("/api/order")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
 }
