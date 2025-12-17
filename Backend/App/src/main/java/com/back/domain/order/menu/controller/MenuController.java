@@ -45,7 +45,8 @@ public class MenuController {
                 menu,
                 req.menuName(),
                 req.menuPrice(),
-                req.imgUrl()
+                req.imgUrl(),
+                req.category()
                 );
         MenuModifyResponse rs = new MenuModifyResponse(menu);
 
