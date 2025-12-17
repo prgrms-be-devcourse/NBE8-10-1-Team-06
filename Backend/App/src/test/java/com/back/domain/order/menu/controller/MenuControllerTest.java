@@ -5,6 +5,7 @@ import com.back.domain.order.menu.repository.MenuRepository;
 import com.back.domain.order.menu.service.MenuService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.springframework.http.MediaType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,11 +37,11 @@ public class MenuControllerTest {
 
     @BeforeEach
     void setup() {
-        Menu menu1 = new Menu("망패블","tmpImgURL", 4500,"블렌디드","example@example.com");
+        Menu menu1 = new Menu("망패블", "tmpImgURL", 4500, "블렌디드", "example@example.com");
         menuRepository.save(menu1);
-        Menu menu2 = new Menu("카페라떼","tmpImgURL", 5000,"커피","example@example.com");
+        Menu menu2 = new Menu("카페라떼", "tmpImgURL", 5000, "커피", "example@example.com");
         menuRepository.save(menu2);
-        Menu menu3 = new Menu("뉴욕치즈케이크","tmpImgURL", 4500,"디저트","example@example.com");
+        Menu menu3 = new Menu("뉴욕치즈케이크", "tmpImgURL", 5500, "디저트", "example@example.com");
         menuRepository.save(menu3);
     }
 
@@ -51,7 +52,7 @@ public class MenuControllerTest {
                 .perform(get("/api/menu"))
                 .andDo(print());
 
-        List<Menu> menus =  menuService.findAll();
+        List<Menu> menus = menuService.findAll();
 
         resultActions
                 .andExpect(handler().handlerType(MenuController.class))
@@ -59,7 +60,7 @@ public class MenuControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(menus.size()));
 
-        for( int i = 0; i < menus.size(); i++ ) {
+        for (int i = 0; i < menus.size(); i++) {
             Menu menu = menus.get(i);
             resultActions
                     .andExpect(jsonPath("$[%d].menu_name".formatted(i)).value(menu.getMenuName()))
@@ -67,6 +68,38 @@ public class MenuControllerTest {
                     .andExpect(jsonPath("$[%d].price".formatted(i)).value(menu.getMenuPrice()))
                     .andExpect(jsonPath("$[%d].category".formatted(i)).value(menu.getCategory()));
         }
+
+    }
+
+    @Test
+    @DisplayName("메뉴 수정")
+    void t01() throws Exception {
+        int menuId = 2;
+
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/api/menu/modify/" + menuId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "menu_name": "쿨라임 피지오",
+                                    "price": 3000,
+                                    "img_url": "testImgUrl",
+                                    "category": "피지오"
+                                }
+                                """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(MenuController.class))
+                .andExpect(handler().methodName("modifyMenu"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.menu_id").value(2))
+                .andExpect(jsonPath("$.menu_name").value("쿨라임 피지오"))
+                .andExpect(jsonPath("$.price").value(3000))
+                .andExpect(jsonPath("$.category").value("피지오"));
+
 
     }
 }
