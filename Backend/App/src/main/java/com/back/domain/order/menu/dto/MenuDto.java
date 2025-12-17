@@ -30,7 +30,6 @@ public class MenuDto {
         }
     }
 
-
     public record MenuModifyRequest(
             @JsonProperty("menu_id")
             Long menuId,
@@ -64,6 +63,4 @@ public class MenuDto {
             );
         }
     }
-
-
 }

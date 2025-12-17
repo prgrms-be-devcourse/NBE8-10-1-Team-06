@@ -30,15 +30,15 @@ public class OrderService {
     public void createOrder(OrderDto.CreateRequest request) {
         Customer customer = customerRepository.findByEmail(request.email())
                 .orElseGet(() -> customerRepository.save(
-                        new Customer(
-                                request.email(),
-                                request.address(),
-                                request.postcode(),
-                                new ArrayList<>()
-                        )
+                        new Customer(request.email())
                 ));
 
-        Order order = new Order(customer, LocalDateTime.now());
+        Order order = new Order(
+                customer,
+                LocalDateTime.now(),
+                request.address(),
+                request.postcode()
+        );
         orderRepository.save(order);
 
         for (OrderDto.OrderItemRequest itemRequest : request.items()) {

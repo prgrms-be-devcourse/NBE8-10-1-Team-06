@@ -13,12 +13,15 @@ public class OrderDto {
             @NotBlank String address,
             @NotNull Integer postcode,
             @NotNull List<OrderItemRequest> items
-    ) {}
+    ) {
+    }
 
     public record OrderItemRequest(
             @NotNull Long menuId,
-            @NotNull Integer count
-    ) {}
+            @NotNull int count
+    ) {
+    }
 
-    public record CreateResponse(String message) {}
+    public record CreateResponse(String message) {
+    }
 }
