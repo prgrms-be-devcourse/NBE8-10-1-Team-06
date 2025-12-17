@@ -22,5 +22,4 @@ public class Order extends BaseEntity {
     
     private LocalDateTime orderTime;
 
-    private String Password;
 }

@@ -9,12 +9,14 @@ import com.back.domain.order.order.entity.Order;
 import com.back.domain.order.order.repository.OrderRepository;
 import com.back.domain.order.orderitem.entity.OrderItem;
 import com.back.domain.order.orderitem.repository.OrderItemRepository;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 
 @Service
@@ -54,5 +56,35 @@ public class OrderService {
             );
             orderItemRepository.save(orderItem);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public OrderDto.OrderListResponse getOrderList(@NotNull String email) {
+        // email을 기준으로 해당 고객의 주문 상품 목록 조회
+        List<OrderItem> orderItemList = orderItemRepository.findByOrderCustomerEmail(email);
+
+        if (orderItemList.isEmpty()) {
+            // 주문 내역이 없으면 빈 리스트를 반환
+            return new OrderDto.OrderListResponse(email, "", 0, List.of());
+        }
+
+        Customer customer = orderItemList.get(0).getOrder().getCustomer();
+
+        // OrderItem 엔티티 리스트를 OrderItemDTO 리스트로 변환
+        List<OrderDto.OrderItemDTO> orders = new ArrayList<>();
+        for (OrderItem orderItem : orderItemList) {
+            orders.add(new OrderDto.OrderItemDTO(
+                    orderItem.getMenu().getMenuName(),
+                    orderItem.getMenu().getMenuPrice(),
+                    orderItem.getCount()
+            ));
+        }
+
+        return new OrderDto.OrderListResponse(
+                customer.getEmail(),
+                customer.getAddress(),
+                customer.getPostcode(),
+                orders
+        );
     }
 }
