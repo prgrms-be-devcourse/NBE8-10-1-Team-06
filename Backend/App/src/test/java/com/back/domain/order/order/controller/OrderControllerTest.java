@@ -125,7 +125,6 @@ public class OrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andDo(print())
-                // then
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("주문이 성공적으로 등록되었습니다."));
 
@@ -138,5 +137,28 @@ public class OrderControllerTest {
         List<Order> orders = orderRepository.findAll();
         assertThat(orders).hasSize(1);
         assertThat(orders.get(0).getCustomer().getId()).isEqualTo(existingCustomer.getId());
+    }
+
+    @Test
+    @DisplayName("주문 생성 실패 - 이메일 누락")
+    void createOrder_MissingEmail_Fail() throws Exception {
+        String requestBody = String.format("""
+                {
+                    "address": "서울시 강남구",
+                    "postcode": 12345,
+                    "items": [
+                        {
+                            "menuId": %d,
+                            "count": 2
+                        }
+                    ]
+                }
+                """, menu1Id);
+
+        mvc.perform(post("/api/order")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
     }
 }
