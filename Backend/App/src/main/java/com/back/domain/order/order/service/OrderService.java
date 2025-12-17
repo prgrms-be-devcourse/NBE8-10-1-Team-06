@@ -68,7 +68,8 @@ public class OrderService {
             return new OrderDto.OrderListResponse(email, "", 0, List.of());
         }
 
-        Customer customer = orderItemList.get(0).getOrder().getCustomer();
+        Order order = orderItemList.get(0).getOrder();
+        Customer customer = order.getCustomer();
 
         // OrderItem 엔티티 리스트를 OrderItemDTO 리스트로 변환
         List<OrderDto.OrderItemDTO> orders = new ArrayList<>();
@@ -82,8 +83,8 @@ public class OrderService {
 
         return new OrderDto.OrderListResponse(
                 customer.getEmail(),
-                customer.getAddress(),
-                customer.getPostcode(),
+                order.getAddress(),
+                order.getPostcode(),
                 orders
         );
     }
