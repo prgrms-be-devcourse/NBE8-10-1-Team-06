@@ -100,4 +100,43 @@ public class OrderControllerTest {
         List<OrderItem> orderItems = orderItemRepository.findAll();
         assertThat(orderItems).hasSize(2);
     }
+
+    @Test
+    @DisplayName("주문 생성 성공 - 기존 고객")
+    void createOrder_ExistingCustomer_Success() throws Exception {
+        Customer existingCustomer = customerRepository.save(
+                new Customer("existing@test.com"));
+
+        String requestBody = String.format("""
+                {
+                    "email": "existing@test.com",
+                    "address": "서울시 송파구",
+                    "postcode": 54321,
+                    "items": [
+                        {
+                            "menuId": %d,
+                            "count": 3
+                        }
+                    ]
+                }
+                """, menu1Id);
+
+        mvc.perform(post("/api/order")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andDo(print())
+                // then
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("주문이 성공적으로 등록되었습니다."));
+
+        List<Customer> customers = customerRepository.findAll();
+        long customerCount = customers.stream()
+                .filter(c -> c.getEmail().equals("existing@test.com"))
+                .count();
+        assertThat(customerCount).isEqualTo(1);
+
+        List<Order> orders = orderRepository.findAll();
+        assertThat(orders).hasSize(1);
+        assertThat(orders.get(0).getCustomer().getId()).isEqualTo(existingCustomer.getId());
+    }
 }
