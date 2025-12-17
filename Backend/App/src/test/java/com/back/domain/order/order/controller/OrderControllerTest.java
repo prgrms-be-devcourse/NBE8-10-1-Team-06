@@ -161,4 +161,30 @@ public class OrderControllerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("주문 생성 실패 - 유효하지 않은 이메일 형식")
+    void createOrder_InvalidEmail_Fail() throws Exception {
+        // given
+        String requestBody = String.format("""
+                {
+                    "email": "invalidemail",
+                    "address": "서울시 강남구",
+                    "postcode": 12345,
+                    "items": [
+                        {
+                            "menuId": %d,
+                            "count": 2
+                        }
+                    ]
+                }
+                """, menu1Id);
+
+        // when & then
+        mvc.perform(post("/api/order")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
 }
