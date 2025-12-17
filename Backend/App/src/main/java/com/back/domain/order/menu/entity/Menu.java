@@ -25,10 +25,12 @@ public class Menu extends BaseEntity {
     public void modify(
             String menuName,
             int menuPrice,
-            String imageUrl
+            String imageUrl,
+            String category
     ) {
         this.menuName = menuName;
         this.menuPrice = menuPrice;
         this.imgUrl = imageUrl;
+        this.category = category;
     }
 }
