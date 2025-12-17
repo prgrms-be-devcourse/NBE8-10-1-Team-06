@@ -4,9 +4,10 @@ import com.back.domain.order.customer.entity.Customer;
 import com.back.domain.order.customer.repository.CustomerRepository;
 import com.back.domain.order.menu.entity.Menu;
 import com.back.domain.order.menu.repository.MenuRepository;
-import com.back.domain.order.menu.service.MenuService;
 import com.back.domain.order.order.entity.Order;
 import com.back.domain.order.order.repository.OrderRepository;
+import com.back.domain.order.orderitem.entity.OrderItem;
+import com.back.domain.order.orderitem.repository.OrderItemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,11 +17,11 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -34,7 +35,7 @@ public class OrderControllerTest {
     private MockMvc mvc;
 
     @Autowired
-    private MenuService menuService;
+    private MenuRepository menuRepository;
 
     @Autowired
     private CustomerRepository customerRepository;
@@ -42,55 +43,61 @@ public class OrderControllerTest {
     @Autowired
     private OrderRepository orderRepository;
 
-    @Autowired private MenuRepository menuRepository;
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
     private Long menu1Id;
     private Long menu2Id;
 
-
     @BeforeEach
-    void setUpMenus() {
-        menuRepository.deleteAll();
-
-        Menu menu1 = menuRepository.save(new Menu("아메리카노","tmpImgURL", 4500,"음료","example@example.com"));
-        Menu menu2 = menuRepository.save(new Menu("카페라떼","tmpImgURL", 5000,"음료","example@example.com"));
-        menuRepository.save(new Menu("카푸치노","tmpImgURL", 5500,"음료","example@example.com"));
+    void setUp() {
+        Menu menu1 = menuRepository.save(
+                new Menu("아메리카노", "tmpImgURL", 4500, "음료", "example@example.com"));
+        Menu menu2 = menuRepository.save(
+                new Menu("카페라떼", "tmpImgURL", 5000, "음료", "example@example.com"));
 
         menu1Id = menu1.getId();
         menu2Id = menu2.getId();
     }
 
     @Test
-    @DisplayName("주문 생성 - 신규 고객")
+    @DisplayName("주문 생성 성공 - 신규 고객")
     void t1() throws Exception {
-        String customerEmail = "test@test.com";
-        Optional<Customer> existingCustomer = customerRepository.findByEmail(customerEmail);
+        String requestBody = String.format("""
+                {
+                    "email": "newcustomer@test.com",
+                    "address": "서울시 강남구",
+                    "postcode": 12345,
+                    "items": [
+                        {
+                            "menuId": %d,
+                            "count": 2
+                        },
+                        {
+                            "menuId": %d,
+                            "count": 1
+                        }
+                    ]
+                }
+                """, menu1Id, menu2Id);
 
-        ResultActions resultActions = mvc
-                .perform(
-                        post("/api/order")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                {
-                                  "email": "test@test.com",
-                                  "address": "서울시 강남구",
-                                  "postcode": 12345,
-                                  "items": [
-                                    { "menuId": %d, "count": 2 },
-                                    { "menuId": %d, "count": 1 }
-                                  ]
-                                }
-                                """.formatted(menu1Id, menu2Id))
-                )
-                .andDo(print());
-
-        resultActions
-                .andExpect(handler().handlerType(OrderController.class))
-                .andExpect(handler().methodName("createOrder"))
+        mvc.perform(post("/api/order")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("주문이 성공적으로 등록되었습니다."));
 
-        Customer customer = customerRepository.findByEmail(customerEmail).orElseThrow();
-        assert customer.getOrders().size() > 0;
+        Customer customer = customerRepository.findByEmail("newcustomer@test.com").orElse(null);
+        assertThat(customer).isNotNull();
+        assertThat(customer.getEmail()).isEqualTo("newcustomer@test.com");
+
+        List<Order> orders = orderRepository.findAll();
+        assertThat(orders).hasSize(1);
+        assertThat(orders.get(0).getAddress()).isEqualTo("서울시 강남구");
+        assertThat(orders.get(0).getPostcode()).isEqualTo(12345);
+
+        List<OrderItem> orderItems = orderItemRepository.findAll();
+        assertThat(orderItems).hasSize(2);
     }
 }
