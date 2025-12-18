@@ -35,9 +35,10 @@ public class MenuService {
             Menu menu,
             String menuName,
             int menuPrice,
-            String imageUrl
+            String imageUrl,
+            String category
             ) {
-        menu.modify(menuName, menuPrice, imageUrl);
+        menu.modify(menuName, menuPrice, imageUrl, category);
     }
     public void createMenu(CreateMenuRequestDto req) {
         Menu menu = new Menu(req.getMenuName(),req.getImageURL(),req.getPrice(),req.getCategory(),req.getEmail());

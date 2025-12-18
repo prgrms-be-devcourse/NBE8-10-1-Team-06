@@ -14,7 +14,7 @@ public class MenuDto {
             String category,
             @JsonProperty("menu_name")
             String menuName,
-            @JsonProperty("menu_price")
+            @JsonProperty("price")
             int menuPrice,
             @JsonProperty("img_url")
             String imgUrl
@@ -30,7 +30,6 @@ public class MenuDto {
         }
     }
 
-
     public record MenuModifyRequest(
             @JsonProperty("menu_id")
             Long menuId,
@@ -41,7 +40,9 @@ public class MenuDto {
             @JsonProperty("price")
             int menuPrice,
             @JsonProperty("img_url")
-            String imgUrl
+            String imgUrl,
+            @NotBlank(message = "카테고리를 입력하세요.")
+            String category
     ) {}
 
     public record MenuModifyResponse(
@@ -50,16 +51,16 @@ public class MenuDto {
             @JsonProperty("menu_name")
             String menuName,
             @JsonProperty("price")
-            int menuPrice
+            int menuPrice,
+            String category
     ) {
         public MenuModifyResponse(Menu menu) {
             this(
                     menu.getId(),
                     menu.getMenuName(),
-                    menu.getMenuPrice()
+                    menu.getMenuPrice(),
+                    menu.getCategory()
             );
         }
     }
-
-
 }
