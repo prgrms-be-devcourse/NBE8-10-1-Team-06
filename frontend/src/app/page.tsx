@@ -62,38 +62,40 @@ export default function Home() {
   const [orderHistory, setOrderHistory] = useState<OrderHistory | null>(null);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+
   const loadProducts = async () => {
     try {
-      // 먼저 백엔드 API에서 메뉴 데이터 가져오기 시도
       const res = await fetch("/api/menu", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
         cache: "no-store",
       });
 
-      if (res.ok) {
-        const apiData: MenuItem[] = await res.json();
-        // API 응답을 Product 형식으로 변환
-        const convertedProducts: Product[] = apiData.map((item) => ({
-          id: item.menu_id.toString(),
-          name: item.menu_name,
-          category: item.category,
-          price: item.price,
-          img_url: item.img_url,
-        }));
-        setProducts(convertedProducts);
-      } else {
-        throw new Error("백엔드 API 호출 실패");
+      if (!res.ok) {
+        throw new Error(`서버 응답 오류: ${res.status}`);
       }
+
+      const apiData: MenuItem[] = await res.json();
+      console.log("백엔드에서 받은 데이터:", apiData);
+
+      const convertedProducts: Product[] = apiData.map((item) => ({
+        id: item.menu_id.toString(),
+        name: item.menu_name,
+        category: item.category,
+        price: item.price,
+        img_url: item.img_url,
+      }));
+
+      setProducts(convertedProducts);
     } catch (err) {
-      console.error("백엔드 API 호출 실패, 더미 데이터 사용:", err);
-      // 백엔드 API 호출 실패 시 더미 데이터 사용
-      try {
-        const res = await fetch("/api/products", { cache: "no-store" });
-        if (!res.ok) throw new Error("상품을 불러오지 못했습니다");
-        const data: Product[] = await res.json();
-        setProducts(data);
-      } catch (fallbackErr) {
-        console.error("더미 데이터 로드 실패:", fallbackErr);
-      }
+      console.error("메뉴 데이터 로드 실패:", err);
+      alert("메뉴 데이터를 불러오는데 실패했습니다. 백엔드 서버가 실행 중인지 확인해주세요.");
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -104,19 +106,7 @@ export default function Home() {
   }, []);
 
   const addToCart = (id: string) => {
-    setCart((prev) => {
-      const currentTotal = Object.values(prev).reduce(
-        (acc, curr) => acc + curr,
-        0,
-      );
-
-      if (currentTotal >= 100) {
-        alert("주문 수량은 최대 100개까지 가능합니다.");
-        return prev;
-      }
-
-      return { ...prev, [id]: (prev[id] ?? 0) + 1 };
-    });
+    setCart((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
   };
 
   const removeFromCart = (id: string) => {
@@ -159,11 +149,6 @@ export default function Home() {
 
   const handleCheckout = async () => {
     if (selectedItems.length === 0) return;
-
-    if (totalCount > 100) {
-      alert("주문 수량은 최대 100개까지 가능합니다.");
-      return;
-    }
 
     if (!orderForm.email || !isValidEmail(orderForm.email)) {
       alert("유효한 이메일 주소를 입력해주세요.");
@@ -224,23 +209,66 @@ export default function Home() {
       price: "",
       image: "",
     });
+    setImageFile(null);
+    setImagePreview("");
   };
 
   const handleFormChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    if (name === "price") {
-      const numeric = parseInt(value, 10);
-      if (!Number.isNaN(numeric) && numeric > 10000000) {
-        alert("품목 제안 금액은 최대 10,000,000원까지 가능합니다.");
-        setFormData((prev) => ({ ...prev, [name]: "10000000" }));
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert('이미지 파일만 업로드 가능합니다');
         return;
       }
-    }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+      if (file.size > 5 * 1024 * 1024) {
+        alert('파일 크기는 5MB를 초과할 수 없습니다');
+        return;
+      }
+
+      setImageFile(file);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (): Promise<string> => {
+    if (!imageFile) return formData.image;
+
+    setUploadingImage(true);
+    try {
+      const formDataToUpload = new FormData();
+      formDataToUpload.append('file', imageFile);
+
+      const response = await fetch('http://localhost:8080/api/upload/image', {
+        method: 'POST',
+        body: formDataToUpload,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || '이미지 업로드 실패');
+      }
+
+      const data = await response.json();
+      return data.imageUrl;
+    } catch (err) {
+      console.error('이미지 업로드 오류:', err);
+      throw err;
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -248,6 +276,12 @@ export default function Home() {
     setIsSubmitting(true);
 
     try {
+      let imageUrl = formData.image;
+      if (imageFile) {
+        imageUrl = await uploadImage();
+      }
+
+      // 2. 메뉴 데이터 전송
       const response = await fetch("/api/menu", {
         method: "POST",
         headers: {
@@ -258,7 +292,7 @@ export default function Home() {
           category: formData.category,
           menu_name: formData.menu_name,
           price: parseInt(formData.price, 10),
-          image: formData.image || "",
+          image: imageUrl, // 업로드된 이미지 URL 또는 입력한 URL
         }),
       });
 
@@ -268,6 +302,7 @@ export default function Home() {
 
       const data = await response.json();
       alert(data.message || "상품 추가 제안이 접수되었습니다.");
+
       // 상품 목록을 즉시 최신 상태로 갱신
       setLoading(true);
       await loadProducts();
@@ -672,7 +707,6 @@ export default function Home() {
                   onChange={handleFormChange}
                   required
                   min="0"
-                  max="10000000"
                   step="1"
                   className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
                   placeholder="0"
@@ -681,161 +715,97 @@ export default function Home() {
 
               <label className="block space-y-1">
                 <span className="text-sm font-medium text-slate-700">
-                  이미지 (선택사항)
+                  이미지
                 </span>
-                <input
-                  type="url"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleFormChange}
-                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
-                  placeholder="이미지 URL을 입력하세요"
-                />
-                <p className="text-xs text-slate-500">
-                  이미지 URL을 입력하거나 파일을 업로드하세요
-                </p>
+
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    disabled={isSubmitting}
+                    className="w-full text-sm text-slate-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-md file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-emerald-50 file:text-emerald-700
+                      hover:file:bg-emerald-100
+                      disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 border-t border-slate-200"></div>
+                    <span className="text-xs text-slate-400">또는</span>
+                    <div className="flex-1 border-t border-slate-200"></div>
+                  </div>
+
+                  <input
+                    type="url"
+                    name="image"
+                    value={formData.image}
+                    onChange={handleFormChange}
+                    disabled={!!imageFile || isSubmitting}
+                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                    placeholder="이미지 URL 직접 입력"
+                  />
+
+                  <p className="text-xs text-slate-500">
+                    {imageFile
+                      ? "파일을 선택했습니다. 제출하면 자동으로 업로드됩니다."
+                      : "파일을 선택하거나 이미지 URL을 입력하세요."}
+                  </p>
+                </div>
+
+                {(imagePreview || formData.image) && (
+                  <div className="mt-3 space-y-1">
+                    <p className="text-xs font-medium text-slate-600">미리보기:</p>
+                    <div className="relative inline-block">
+                      <img
+                        src={imagePreview || formData.image}
+                        alt="미리보기"
+                        className="h-32 w-32 rounded-lg border-2 border-slate-200 object-cover shadow-sm"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Crect width='128' height='128' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='14' fill='%2394a3b8'%3E이미지 로드 실패%3C/text%3E%3C/svg%3E";
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageFile(null);
+                          setImagePreview("");
+                          setFormData(prev => ({ ...prev, image: "" }));
+                        }}
+                        disabled={isSubmitting}
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-rose-500 text-white shadow-md hover:bg-rose-600 transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </label>
 
               <div className="flex gap-2 pt-2">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || uploadingImage}
                   className="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || uploadingImage}
                   className="flex-1 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isSubmitting ? "제출 중..." : "제안하기"}
+                  {uploadingImage ? "업로드 중..." : isSubmitting ? "제출 중..." : "제안하기"}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* 주문 내역 조회 모달 */}
-      {isHistoryModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={handleCloseHistoryModal}
-        >
-          <div
-            className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-slate-800">
-                주문 내역 조회
-              </h3>
-              <button
-                onClick={handleCloseHistoryModal}
-                className="text-slate-400 transition hover:text-slate-600"
-                disabled={isHistoryLoading}
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block space-y-1">
-                  <span className="text-sm font-medium text-slate-700">
-                    이메일
-                  </span>
-                  <input
-                    type="email"
-                    value={historyEmail}
-                    onChange={(e) => setHistoryEmail(e.target.value)}
-                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
-                    placeholder="주문 시 사용한 이메일을 입력하세요"
-                    disabled={isHistoryLoading}
-                  />
-                </label>
-                <button
-                  type="button"
-                  onClick={handleFetchOrderHistory}
-                  disabled={isHistoryLoading}
-                  className="mt-3 w-full rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isHistoryLoading ? "조회 중..." : "주문 내역 조회"}
-                </button>
-              </div>
-
-              {orderHistory && (
-                <div className="mt-4 space-y-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
-                  <div className="mb-2 flex items-center justify-between">
-                    <div>
-                      <div className="font-semibold text-slate-800">
-                        {orderHistory.email}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        총 {orderHistory.orders.length}건의 주문
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="max-h-64 space-y-3 overflow-y-auto">
-                    {orderHistory.orders.map((order, orderIdx) => (
-                      <div
-                        key={orderIdx}
-                        className="rounded-md border border-slate-200 bg-white"
-                      >
-                        <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2 text-xs text-slate-600">
-                          <span>
-                            배송지: {order.address}{" "}
-                            {order.postcode ? `(${order.postcode})` : ""}
-                          </span>
-                          <span>주문 #{orderIdx + 1}</span>
-                        </div>
-                        <table className="w-full text-left text-xs">
-                          <thead className="bg-slate-100 text-slate-600">
-                            <tr>
-                              <th className="px-3 py-2">메뉴명</th>
-                              <th className="w-20 px-3 py-2 text-right">
-                                가격
-                              </th>
-                              <th className="w-16 px-3 py-2 text-center">
-                                수량
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {(order.items ?? []).map((item, idx) => (
-                              <tr key={idx}>
-                                <td className="px-3 py-2">{item.menuName}</td>
-                                <td className="px-3 py-2 text-right">
-                                  {formatPrice(item.menuPrice)}
-                                </td>
-                                <td className="px-3 py-2 text-center">
-                                  x{item.count}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       )}
