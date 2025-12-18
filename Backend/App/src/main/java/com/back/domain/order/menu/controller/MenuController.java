@@ -42,25 +42,21 @@ public class MenuController {
     ) {
         Menu menu = menuService
                 .findById(id).get();
-        boolean ok = menuService.modify(
+        menuService.modify(
                 menu,
                 req.menuName(),
                 req.menuPrice(),
                 req.imgUrl(),
-                req.category(),
-                req.email()
+                req.category()
                 );
+        RsData<MenuModifyResponse> rs = new RsData<>(
+                "200-1",
+                "메뉴를 수정하였습니다.",
+                new MenuModifyResponse(menu)
+        );
 
-        if(ok){
-            RsData<MenuModifyResponse> rs = new RsData<>(
-                    "200-1",
-                    "메뉴를 수정하였습니다.",
-                    new MenuModifyResponse(menu)
-            );
+        return ResponseEntity.ok(rs);
 
-            return ResponseEntity.ok(rs);
-        }
-        else return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
 

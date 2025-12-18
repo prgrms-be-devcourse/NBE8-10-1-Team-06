@@ -42,19 +42,10 @@ export default function Home() {
   const [cart, setCart] = useState<CartMap>({});
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
-    category: "",
-    menu_name: "",
-    price: "",
-    image: "",
-  });
-  const [editTarget, setEditTarget] = useState<Product | null>(null);
-  const [editForm, setEditForm] = useState({
     email: "",
     category: "",
     menu_name: "",
@@ -235,30 +226,6 @@ export default function Home() {
     });
   };
 
-  const handleOpenEditModal = (product: Product) => {
-    setEditTarget(product);
-    setEditForm({
-      email: "",
-      category: product.category ?? "",
-      menu_name: product.name,
-      price: product.price.toString(),
-      image: product.img_url ?? "",
-    });
-    setIsEditModalOpen(true);
-  };
-
-  const handleCloseEditModal = () => {
-    setIsEditModalOpen(false);
-    setEditTarget(null);
-    setEditForm({
-      email: "",
-      category: "",
-      menu_name: "",
-      price: "",
-      image: "",
-    });
-  };
-
   const handleFormChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -274,68 +241,6 @@ export default function Home() {
     }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleEditFormChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, value } = e.target;
-
-    if (name === "price") {
-      const numeric = parseInt(value, 10);
-      if (!Number.isNaN(numeric) && numeric > 10000000) {
-        alert("가격은 최대 10,000,000원까지 가능합니다.");
-        setEditForm((prev) => ({ ...prev, [name]: "10000000" }));
-        return;
-      }
-    }
-
-    setEditForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editTarget) return;
-
-    if (!isValidEmail(editForm.email)) {
-      alert("유효한 이메일 주소를 입력해주세요.");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch(`/api/menu/${editTarget.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: editForm.email,
-          category: editForm.category,
-          menu_name: editForm.menu_name,
-          price: parseInt(editForm.price, 10),
-          image: editForm.image || "",
-        }),
-      });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        alert(data.message || "메뉴 수정에 실패했습니다.");
-        return;
-      }
-
-      alert(data.message || "메뉴가 수정되었습니다.");
-      setLoading(true);
-      await loadProducts();
-      handleCloseEditModal();
-    } catch (err) {
-      console.error(err);
-      alert("메뉴 수정 중 오류가 발생했습니다.");
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -553,26 +458,6 @@ export default function Home() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-2 whitespace-nowrap">
-                          <button
-                            type="button"
-                            className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-400 hover:border-emerald-400 hover:text-emerald-500"
-                            title="메뉴 수정"
-                            onClick={() => handleOpenEditModal(product)}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              className="h-3.5 w-3.5"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M12 20h9" />
-                              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                            </svg>
-                          </button>
                           <button
                             className="rounded-md border border-emerald-600 px-3 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-600 hover:text-white whitespace-nowrap"
                             onClick={() => addToCart(product.id)}
@@ -826,137 +711,6 @@ export default function Home() {
                   className="flex-1 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isSubmitting ? "제출 중..." : "제안하기"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 메뉴 수정 모달 */}
-      {isEditModalOpen && editTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={handleCloseEditModal}
-        >
-          <div
-            className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-slate-800">
-                메뉴 수정
-              </h3>
-              <button
-                onClick={handleCloseEditModal}
-                className="text-slate-400 transition hover:text-slate-600"
-                disabled={isSubmitting}
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <label className="block space-y-1">
-                <span className="text-sm font-medium text-slate-700">
-                  이메일 (수정 권한 확인용)
-                </span>
-                <input
-                  type="email"
-                  name="email"
-                  value={editForm.email}
-                  onChange={handleEditFormChange}
-                  required
-                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
-                  placeholder="your@email.com"
-                />
-              </label>
-
-              <label className="block space-y-1">
-                <span className="text-sm font-medium text-slate-700">분류</span>
-                <input
-                  type="text"
-                  name="category"
-                  value={editForm.category}
-                  onChange={handleEditFormChange}
-                  required
-                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
-                  placeholder="분류를 입력하세요 (예: 커피콩, 식품, 의류)"
-                />
-              </label>
-
-              <label className="block space-y-1">
-                <span className="text-sm font-medium text-slate-700">
-                  제품명
-                </span>
-                <input
-                  type="text"
-                  name="menu_name"
-                  value={editForm.menu_name}
-                  onChange={handleEditFormChange}
-                  required
-                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
-                  placeholder="제품명을 입력하세요"
-                />
-              </label>
-
-              <label className="block space-y-1">
-                <span className="text-sm font-medium text-slate-700">가격</span>
-                <input
-                  type="number"
-                  name="price"
-                  value={editForm.price}
-                  onChange={handleEditFormChange}
-                  required
-                  min="0"
-                  max="10000000"
-                  step="1"
-                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
-                  placeholder="0"
-                />
-              </label>
-
-              <label className="block space-y-1">
-                <span className="text-sm font-medium text-slate-700">
-                  이미지 (선택사항)
-                </span>
-                <input
-                  type="url"
-                  name="image"
-                  value={editForm.image}
-                  onChange={handleEditFormChange}
-                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
-                  placeholder="이미지 URL을 입력하세요"
-                />
-              </label>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={handleCloseEditModal}
-                  disabled={isSubmitting}
-                  className="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isSubmitting ? "수정 중..." : "수정하기"}
                 </button>
               </div>
             </form>
