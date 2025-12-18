@@ -625,20 +625,6 @@ export default function Home() {
             <p className="mt-4 text-xs text-slate-500">
               당일 오후 2시 이후의 주문은 다음 날 배송을 시작합니다.
             </p>
-              <label className="block space-y-1">
-                <span className="text-sm font-medium text-slate-700">가격</span>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleFormChange}
-                  required
-                  min="0"
-                  step="1"
-                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
-                  placeholder="0"
-                />
-              </label>
 
             <div className="mt-4 flex items-center justify-between rounded-md bg-white px-3 py-2 text-sm shadow-inner">
               <span className="text-slate-600">총 금액</span>
