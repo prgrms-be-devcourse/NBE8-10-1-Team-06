@@ -11,14 +11,12 @@ type Product = {
   img_url?: string;
 };
 
-type MenuApiResponse = {
-  items: Array<{
-    menu_id: number;
-    category: string;
-    menu_name: string;
-    menu_price: number;
-    img_url: string;
-  }>;
+type MenuListResponse = {
+  menu_id: number;
+  category: string;
+  menu_name: string;
+  price: number;
+  img_url: string;
 };
 
 type CartMap = Record<string, number>;
@@ -49,36 +47,28 @@ export default function Home() {
   useEffect(() => {
     const load = async () => {
       try {
-        // 먼저 백엔드 API에서 메뉴 데이터 가져오기 시도
         const res = await fetch("http://localhost:8080/api/menu", {
           cache: "no-store",
         });
-        
-        if (res.ok) {
-          const apiData: MenuApiResponse = await res.json();
-          // API 응답을 Product 형식으로 변환
-          const convertedProducts: Product[] = apiData.items.map((item) => ({
-            id: item.menu_id.toString(),
-            name: item.menu_name,
-            category: item.category,
-            price: item.menu_price,
-            img_url: item.img_url,
-          }));
-          setProducts(convertedProducts);
-        } else {
-          throw new Error("백엔드 API 호출 실패");
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
         }
+
+        const data: MenuListResponse[] = await res.json();
+
+        const convertedProducts: Product[] = data.map((item) => ({
+          id: item.menu_id.toString(),
+          name: item.menu_name,
+          category: item.category,
+          price: item.price,
+          img_url: item.img_url,
+        }));
+
+        setProducts(convertedProducts);
       } catch (err) {
-        console.error("백엔드 API 호출 실패, 더미 데이터 사용:", err);
-        // 백엔드 API 호출 실패 시 더미 데이터 사용
-        try {
-          const res = await fetch("/api/products", { cache: "no-store" });
-          if (!res.ok) throw new Error("상품을 불러오지 못했습니다");
-          const data: Product[] = await res.json();
-          setProducts(data);
-        } catch (fallbackErr) {
-          console.error("더미 데이터 로드 실패:", fallbackErr);
-        }
+        console.error("백엔드 API 호출 실패:", err);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
