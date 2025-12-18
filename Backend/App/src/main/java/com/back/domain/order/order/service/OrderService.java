@@ -16,7 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -65,27 +67,39 @@ public class OrderService {
 
         if (orderItemList.isEmpty()) {
             // 주문 내역이 없으면 빈 리스트를 반환
-            return new OrderDto.OrderListResponse(email, "", 0, List.of());
+            return new OrderDto.OrderListResponse(email, List.of());
         }
 
-        Order order = orderItemList.get(0).getOrder();
-        Customer customer = order.getCustomer();
+        // 주문(주소/우편번호)별로 OrderItemDTO 리스트를 그룹핑
+        Map<Order, List<OrderDto.OrderItemDTO>> orderMap = new LinkedHashMap<>();
 
-        // OrderItem 엔티티 리스트를 OrderItemDTO 리스트로 변환
-        List<OrderDto.OrderItemDTO> orders = new ArrayList<>();
         for (OrderItem orderItem : orderItemList) {
-            orders.add(new OrderDto.OrderItemDTO(
-                    orderItem.getMenu().getMenuName(),
-                    orderItem.getMenu().getMenuPrice(),
-                    orderItem.getCount()
+            Order order = orderItem.getOrder();
+            orderMap
+                    .computeIfAbsent(order, o -> new ArrayList<>())
+                    .add(new OrderDto.OrderItemDTO(
+                            orderItem.getMenu().getMenuName(),
+                            orderItem.getMenu().getMenuPrice(),
+                            orderItem.getCount()
+                    ));
+        }
+
+        List<OrderDto.OrderSummary> summaries = new ArrayList<>();
+        for (Map.Entry<Order, List<OrderDto.OrderItemDTO>> entry : orderMap.entrySet()) {
+            Order order = entry.getKey();
+            List<OrderDto.OrderItemDTO> items = entry.getValue();
+
+            summaries.add(new OrderDto.OrderSummary(
+                    order.getAddress(),
+                    order.getPostcode(),
+                    items
             ));
         }
 
+        // 이메일 기준 전체 주문 묶음 반환
         return new OrderDto.OrderListResponse(
-                customer.getEmail(),
-                order.getAddress(),
-                order.getPostcode(),
-                orders
+                email,
+                summaries
         );
     }
 }

@@ -11,12 +11,25 @@ type Product = {
   img_url?: string;
 };
 
-type MenuListResponse = {
+type MenuItem = {
   menu_id: number;
   category: string;
   menu_name: string;
   price: number;
   img_url: string;
+};
+
+type OrderHistory = {
+  email: string;
+  orders: Array<{
+    address: string;
+    postcode: number;
+    items: Array<{
+      menuName: string;
+      menuPrice: number;
+      count: number;
+    }>;
+  }>;
 };
 
 type CartMap = Record<string, number>;
@@ -31,6 +44,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     category: "",
@@ -43,38 +57,50 @@ export default function Home() {
     address: "",
     postalCode: "",
   });
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [historyEmail, setHistoryEmail] = useState("");
+  const [orderHistory, setOrderHistory] = useState<OrderHistory | null>(null);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch("http://localhost:8080/api/menu", {
-          cache: "no-store",
-        });
+  const loadProducts = async () => {
+    try {
+      // 먼저 백엔드 API에서 메뉴 데이터 가져오기 시도
+      const res = await fetch("/api/menu", {
+        cache: "no-store",
+      });
 
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-
-        const data: MenuListResponse[] = await res.json();
-
-        const convertedProducts: Product[] = data.map((item) => ({
+      if (res.ok) {
+        const apiData: MenuItem[] = await res.json();
+        // API 응답을 Product 형식으로 변환
+        const convertedProducts: Product[] = apiData.map((item) => ({
           id: item.menu_id.toString(),
           name: item.menu_name,
           category: item.category,
           price: item.price,
           img_url: item.img_url,
         }));
-
         setProducts(convertedProducts);
-      } catch (err) {
-        console.error("백엔드 API 호출 실패:", err);
-        setProducts([]);
-      } finally {
-        setLoading(false);
+      } else {
+        throw new Error("백엔드 API 호출 실패");
       }
-    };
+    } catch (err) {
+      console.error("백엔드 API 호출 실패, 더미 데이터 사용:", err);
+      // 백엔드 API 호출 실패 시 더미 데이터 사용
+      try {
+        const res = await fetch("/api/products", { cache: "no-store" });
+        if (!res.ok) throw new Error("상품을 불러오지 못했습니다");
+        const data: Product[] = await res.json();
+        setProducts(data);
+      } catch (fallbackErr) {
+        console.error("더미 데이터 로드 실패:", fallbackErr);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    load();
+  useEffect(() => {
+    loadProducts();
   }, []);
 
   const addToCart = (id: string) => {
@@ -140,15 +166,13 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          email: orderForm.email,
+          address: orderForm.address,
+          postcode: parseInt(orderForm.postalCode, 10),
           items: selectedItems.map((item) => ({
-            menu_id: Number(item.id),
-            menu_count: cart[item.id],
+            menuId: Number(item.id),
+            count: cart[item.id],
           })),
-          customer: {
-            email: orderForm.email,
-            postcode: parseInt(orderForm.postalCode, 10),
-            address: orderForm.address,
-          },
         }),
       });
 
@@ -207,6 +231,7 @@ export default function Home() {
           category: formData.category,
           menu_name: formData.menu_name,
           price: parseInt(formData.price, 10),
+          image: formData.image || "",
         }),
       });
 
@@ -216,6 +241,9 @@ export default function Home() {
 
       const data = await response.json();
       alert(data.message || "상품 추가 제안이 접수되었습니다.");
+      // 상품 목록을 즉시 최신 상태로 갱신
+      setLoading(true);
+      await loadProducts();
       handleCloseModal();
     } catch (err) {
       console.error(err);
@@ -225,14 +253,105 @@ export default function Home() {
     }
   };
 
+  const handleDeleteMenu = async (product: Product) => {
+    if (isDeleting) return;
+
+    const email = window.prompt("삭제 권한 확인을 위해 이메일을 입력해주세요.");
+    if (!email) return;
+
+    if (!isValidEmail(email)) {
+      alert("유효한 이메일 주소를 입력해주세요.");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/menu/${product.id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        const data = await response.json().catch(() => ({}));
+        alert(data.message || "메뉴가 삭제되었습니다.");
+        setProducts((prev) => prev.filter((p) => p.id !== product.id));
+      } else {
+        const error = await response.json().catch(() => ({}));
+        alert(error.message || "메뉴 삭제에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("메뉴 삭제 중 오류가 발생했습니다.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleOpenHistoryModal = () => {
+    setIsHistoryModalOpen(true);
+    setOrderHistory(null);
+  };
+
+  const handleCloseHistoryModal = () => {
+    setIsHistoryModalOpen(false);
+    setHistoryEmail("");
+    setOrderHistory(null);
+    setIsHistoryLoading(false);
+  };
+
+  const handleFetchOrderHistory = async () => {
+    if (!historyEmail || !isValidEmail(historyEmail)) {
+      alert("유효한 이메일 주소를 입력해주세요.");
+      return;
+    }
+
+    setIsHistoryLoading(true);
+    setOrderHistory(null);
+    try {
+      const response = await fetch("/api/order/history", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: historyEmail }),
+      });
+
+      if (response.ok) {
+        const data: OrderHistory = await response.json();
+        setOrderHistory(data);
+      } else if (response.status === 404) {
+        const error = await response.json().catch(() => ({}));
+        alert(error.message || "해당 이메일의 주문 내역이 없습니다.");
+      } else {
+        const error = await response.json().catch(() => ({}));
+        alert(error.message || "주문 내역 조회에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("주문 내역 조회 중 오류가 발생했습니다.");
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-start justify-center bg-slate-100 py-12">
       <main className="flex w-[1200px] max-w-[95vw] gap-6">
         <section className="flex-1 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-slate-800">상품 목록</h2>
-              </div>
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-slate-800">상품 목록</h2>
+            </div>
+            <button
+              type="button"
+              onClick={handleOpenModal}
+              className="rounded-md border border-emerald-600 px-3 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-600 hover:text-white whitespace-nowrap"
+            >
+              상품 추가 제안
+            </button>
           </div>
 
           <div className="overflow-hidden rounded-lg border border-slate-200">
@@ -256,21 +375,46 @@ export default function Home() {
                   products.map((product) => (
                     <tr key={product.id} className="hover:bg-slate-50/80">
                       <td className="px-4 py-3">
-                        {product.img_url ? (
-                          <img
-                            src={product.img_url}
-                            alt={product.name}
-                            className="h-14 w-14 rounded-md border border-slate-200 object-cover shadow-inner"
-                            onError={(e) => {
-                              // 이미지 로드 실패 시 기본 div로 대체
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = "none";
-                            }}
-                          />
-                        ) : null}
-                        {!product.img_url && (
-                          <div className="h-14 w-14 rounded-md border border-slate-200 bg-gradient-to-br from-slate-100 to-slate-200 shadow-inner" />
-                        )}
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-400 hover:border-rose-400 hover:text-rose-500"
+                            title="메뉴 삭제 요청"
+                            onClick={() => handleDeleteMenu(product)}
+                            disabled={isDeleting}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              className="h-3 w-3"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6l-1 14H6L5 6" />
+                              <path d="M10 11v6" />
+                              <path d="M14 11v6" />
+                              <path d="M9 6V4h6v2" />
+                            </svg>
+                          </button>
+                          {product.img_url ? (
+                            <img
+                              src={product.img_url}
+                              alt={product.name}
+                              className="h-14 w-14 rounded-md border border-slate-200 object-cover shadow-inner"
+                              onError={(e) => {
+                                // 이미지 로드 실패 시 기본 div로 대체
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            <div className="h-14 w-14 rounded-md border border-slate-200 bg-gradient-to-br from-slate-100 to-slate-200 shadow-inner" />
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 align-top">
                         <div className="text-sm font-semibold text-slate-800">
@@ -401,6 +545,13 @@ export default function Home() {
             disabled={selectedItems.length === 0 || isCheckoutLoading}
           >
             {isCheckoutLoading ? "처리 중..." : "결제하기"}
+          </button>
+
+          <button
+            onClick={handleOpenHistoryModal}
+            className="mt-2 w-full rounded-md border border-slate-300 bg-white py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            주문 내역 조회
           </button>
 
         </section>
@@ -535,6 +686,128 @@ export default function Home() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 주문 내역 조회 모달 */}
+      {isHistoryModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={handleCloseHistoryModal}
+        >
+          <div
+            className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-slate-800">
+                주문 내역 조회
+              </h3>
+              <button
+                onClick={handleCloseHistoryModal}
+                className="text-slate-400 transition hover:text-slate-600"
+                disabled={isHistoryLoading}
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block space-y-1">
+                  <span className="text-sm font-medium text-slate-700">
+                    이메일
+                  </span>
+                  <input
+                    type="email"
+                    value={historyEmail}
+                    onChange={(e) => setHistoryEmail(e.target.value)}
+                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
+                    placeholder="주문 시 사용한 이메일을 입력하세요"
+                    disabled={isHistoryLoading}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={handleFetchOrderHistory}
+                  disabled={isHistoryLoading}
+                  className="mt-3 w-full rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isHistoryLoading ? "조회 중..." : "주문 내역 조회"}
+                </button>
+              </div>
+
+              {orderHistory && (
+                <div className="mt-4 space-y-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-slate-800">
+                        {orderHistory.email}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        총 {orderHistory.orders.length}건의 주문
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="max-h-64 space-y-3 overflow-y-auto">
+                    {orderHistory.orders.map((order, orderIdx) => (
+                      <div
+                        key={orderIdx}
+                        className="rounded-md border border-slate-200 bg-white"
+                      >
+                        <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2 text-xs text-slate-600">
+                          <span>
+                            배송지: {order.address}{" "}
+                            {order.postcode ? `(${order.postcode})` : ""}
+                          </span>
+                          <span>주문 #{orderIdx + 1}</span>
+                        </div>
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-slate-100 text-slate-600">
+                            <tr>
+                              <th className="px-3 py-2">메뉴명</th>
+                              <th className="w-20 px-3 py-2 text-right">
+                                가격
+                              </th>
+                              <th className="w-16 px-3 py-2 text-center">
+                                수량
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {(order.items ?? []).map((item, idx) => (
+                              <tr key={idx}>
+                                <td className="px-3 py-2">{item.menuName}</td>
+                                <td className="px-3 py-2 text-right">
+                                  {formatPrice(item.menuPrice)}
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                  x{item.count}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
