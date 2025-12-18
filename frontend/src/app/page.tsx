@@ -751,19 +751,64 @@ export default function Home() {
                     />
                   </label>
 
-                  <label className="block space-y-1">
-                <span className="text-sm font-medium text-slate-700">
-                  이미지
-                </span>
+                  <div className="block space-y-2">
+                    <span className="text-sm font-medium text-slate-700">이미지</span>
+
                     <input
-                        type="text"
-                        name="image"
-                        value={formData.image}
-                        onChange={handleFormChange}
-                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
-                        placeholder="이미지 URL을 입력하세요"
+                      type="text"
+                      name="image"
+                      value={formData.image}
+                      onChange={handleFormChange}
+                      disabled={imageFile !== null}
+                      className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                      placeholder="이미지 URL을 입력하세요"
                     />
-                  </label>
+
+                    <div className="flex items-center gap-2">
+                      <div className="h-px flex-1 bg-slate-200" />
+                      <span className="text-xs text-slate-400">또는</span>
+                      <div className="h-px flex-1 bg-slate-200" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          disabled={formData.image !== ""}
+                          className="flex-1 text-sm text-slate-600 file:mr-4 file:rounded-md file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-emerald-700 hover:file:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+
+                        {imageFile && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImageFile(null);
+                              setImagePreview("");
+                            }}
+                            className="rounded-md border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
+                          >
+                            취소
+                          </button>
+                        )}
+                      </div>
+
+                      {imagePreview && (
+                        <div className="mt-2">
+                          <img
+                            src={imagePreview}
+                            alt="미리보기"
+                            className="h-32 w-32 rounded-md border border-slate-200 object-cover"
+                          />
+                        </div>
+                      )}
+
+                      {uploadingImage && (
+                        <p className="text-xs text-emerald-600">이미지 업로드 중...</p>
+                      )}
+                    </div>
+                  </div>
 
                   <div className="flex gap-2 pt-2">
                     <button
