@@ -60,7 +60,7 @@ public class MenuController {
     }
 
 
-    @PostMapping("/api/menu") //추가기능
+    @PostMapping //추가기능
     @Transactional
     public ResponseEntity<String> createMenu(
             @RequestBody CreateMenuRequestDto req
@@ -69,7 +69,7 @@ public class MenuController {
         return ResponseEntity.status(HttpStatus.CREATED).body("생성 완료되었습니다.");
     }
 
-    @DeleteMapping("/api/menu/delete/{menu_id}")
+    @DeleteMapping("/delete/{menu_id}")
     @Transactional
     public ResponseEntity<String> deleteMenu(
             @PathVariable Long menu_id,
@@ -79,7 +79,7 @@ public class MenuController {
 
         boolean ok = menuService.deleteMenu(req);
 
-        if (true) { //validation 통과
+        if (ok) { //validation 통과
             return ResponseEntity.status(HttpStatus.OK).body("삭제되었습니다.");
         }
         // validation 실패

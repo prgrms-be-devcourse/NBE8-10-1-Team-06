@@ -28,7 +28,7 @@ public class OrderController {
         );
     }
 
-    @GetMapping("/api/order")
+    @PostMapping("/api/order/list")
     @Transactional(readOnly = true)
     public ResponseEntity<OrderDto.OrderListResponse> orderList(
             @Valid @RequestBody OrderDto.OrderListRequest request

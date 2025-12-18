@@ -31,19 +31,26 @@ public class OrderDto {
 
     }
 
-    public record OrderListResponse(
-            @NotNull String email,
-            @NotNull String address,
-            @NotNull int postcode,
-            @NotNull List<OrderItemDTO> orders
-    ) { //주문 내역을 반환하는 DTO, 주문 내역을 반환한다
-    }
-
     public record OrderItemDTO(
             @NotNull String menuName,
             @NotNull int menuPrice,
             @NotNull int count
     ){
 
+    }
+
+    // 이메일 기준 전체 주문 내역 조회 응답
+    public record OrderListResponse(
+            @NotNull String email,
+            @NotNull List<OrderSummary> orders
+    ) { // 이메일별 주문 묶음을 반환한다
+    }
+
+    // 개별 주문(주소/우편번호별) 요약 + 해당 주문의 아이템 목록
+    public record OrderSummary(
+            @NotNull String address,
+            @NotNull int postcode,
+            @NotNull List<OrderItemDTO> items
+    ) {
     }
 }
