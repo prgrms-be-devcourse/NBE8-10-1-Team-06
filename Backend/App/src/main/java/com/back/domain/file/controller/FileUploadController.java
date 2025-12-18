@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,7 +51,9 @@ public class FileUploadController {
                         .body(Map.of("message", "파일 크기는 5MB를 초과할 수 없습니다"));
             }
 
-            Path uploadPath = Paths.get(uploadDir);
+            Path uploadPath = Paths.get(uploadDir).isAbsolute()
+                    ? Paths.get(uploadDir)
+                    : Paths.get(System.getProperty("user.dir"), uploadDir);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
                 log.info("업로드 디렉토리 생성: {}", uploadPath.toAbsolutePath());
