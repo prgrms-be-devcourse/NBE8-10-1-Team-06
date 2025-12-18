@@ -71,38 +71,40 @@ export default function Home() {
   const [orderHistory, setOrderHistory] = useState<OrderHistory | null>(null);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+
   const loadProducts = async () => {
     try {
-      // 먼저 백엔드 API에서 메뉴 데이터 가져오기 시도
       const res = await fetch("/api/menu", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
         cache: "no-store",
       });
 
-      if (res.ok) {
-        const apiData: MenuItem[] = await res.json();
-        // API 응답을 Product 형식으로 변환
-        const convertedProducts: Product[] = apiData.map((item) => ({
-          id: item.menu_id.toString(),
-          name: item.menu_name,
-          category: item.category,
-          price: item.price,
-          img_url: item.img_url,
-        }));
-        setProducts(convertedProducts);
-      } else {
-        throw new Error("백엔드 API 호출 실패");
+      if (!res.ok) {
+        throw new Error(`서버 응답 오류: ${res.status}`);
       }
+
+      const apiData: MenuItem[] = await res.json();
+      console.log("백엔드에서 받은 데이터:", apiData);
+
+      const convertedProducts: Product[] = apiData.map((item) => ({
+        id: item.menu_id.toString(),
+        name: item.menu_name,
+        category: item.category,
+        price: item.price,
+        img_url: item.img_url,
+      }));
+
+      setProducts(convertedProducts);
     } catch (err) {
-      console.error("백엔드 API 호출 실패, 더미 데이터 사용:", err);
-      // 백엔드 API 호출 실패 시 더미 데이터 사용
-      try {
-        const res = await fetch("/api/products", { cache: "no-store" });
-        if (!res.ok) throw new Error("상품을 불러오지 못했습니다");
-        const data: Product[] = await res.json();
-        setProducts(data);
-      } catch (fallbackErr) {
-        console.error("더미 데이터 로드 실패:", fallbackErr);
-      }
+      console.error("메뉴 데이터 로드 실패:", err);
+      alert("메뉴 데이터를 불러오는데 실패했습니다. 백엔드 서버가 실행 중인지 확인해주세요.");
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -169,11 +171,6 @@ export default function Home() {
   const handleCheckout = async () => {
     if (selectedItems.length === 0) return;
 
-    if (totalCount > 100) {
-      alert("주문 수량은 최대 100개까지 가능합니다.");
-      return;
-    }
-
     if (!orderForm.email || !isValidEmail(orderForm.email)) {
       alert("유효한 이메일 주소를 입력해주세요.");
       return;
@@ -233,21 +230,64 @@ export default function Home() {
       price: "",
       image: "",
     });
+    setImageFile(null);
+    setImagePreview("");
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    if (name === "price") {
-      const numeric = parseInt(value, 10);
-      if (!Number.isNaN(numeric) && numeric > 10000000) {
-        alert("품목 제안 금액은 최대 10,000,000원까지 가능합니다.");
-        setFormData((prev) => ({ ...prev, [name]: "10000000" }));
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert('이미지 파일만 업로드 가능합니다');
         return;
       }
-    }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+      if (file.size > 5 * 1024 * 1024) {
+        alert('파일 크기는 5MB를 초과할 수 없습니다');
+        return;
+      }
+
+      setImageFile(file);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (): Promise<string> => {
+    if (!imageFile) return formData.image;
+
+    setUploadingImage(true);
+    try {
+      const formDataToUpload = new FormData();
+      formDataToUpload.append('file', imageFile);
+
+      const response = await fetch('http://localhost:8080/api/upload/image', {
+        method: 'POST',
+        body: formDataToUpload,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || '이미지 업로드 실패');
+      }
+
+      const data = await response.json();
+      return data.imageUrl;
+    } catch (err) {
+      console.error('이미지 업로드 오류:', err);
+      throw err;
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -255,6 +295,12 @@ export default function Home() {
     setIsSubmitting(true);
 
     try {
+      let imageUrl = formData.image;
+      if (imageFile) {
+        imageUrl = await uploadImage();
+      }
+
+      // 2. 메뉴 데이터 전송
       const response = await fetch("/api/menu", {
         method: "POST",
         headers: {
@@ -265,7 +311,7 @@ export default function Home() {
           category: formData.category,
           menu_name: formData.menu_name,
           price: parseInt(formData.price, 10),
-          image: formData.image || "",
+          image: imageUrl, // 업로드된 이미지 URL 또는 입력한 URL
         }),
       });
 
@@ -275,6 +321,7 @@ export default function Home() {
 
       const data = await response.json();
       alert(data.message || "상품 추가 제안이 접수되었습니다.");
+
       // 상품 목록을 즉시 최신 상태로 갱신
       setLoading(true);
       await loadProducts();
@@ -578,6 +625,20 @@ export default function Home() {
             <p className="mt-4 text-xs text-slate-500">
               당일 오후 2시 이후의 주문은 다음 날 배송을 시작합니다.
             </p>
+              <label className="block space-y-1">
+                <span className="text-sm font-medium text-slate-700">가격</span>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleFormChange}
+                  required
+                  min="0"
+                  step="1"
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
+                  placeholder="0"
+                />
+              </label>
 
             <div className="mt-4 flex items-center justify-between rounded-md bg-white px-3 py-2 text-sm shadow-inner">
               <span className="text-slate-600">총 금액</span>
@@ -706,7 +767,7 @@ export default function Home() {
 
                   <label className="block space-y-1">
                 <span className="text-sm font-medium text-slate-700">
-                  이미지 (선택사항)
+                  이미지
                 </span>
                     <input
                         type="text"
