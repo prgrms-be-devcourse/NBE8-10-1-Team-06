@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,5 +27,19 @@ public class OrderController {
                 new OrderDto.CreateResponse("주문이 성공적으로 등록되었습니다.")
         );
     }
+
+    @GetMapping("/api/order")
+    @Transactional(readOnly = true)
+    public ResponseEntity<OrderDto.OrderListResponse> orderList(
+            @Valid @RequestBody OrderDto.OrderListRequest request
+    ) {
+        OrderDto.OrderListResponse response = orderService.getOrderList(request.email());
+        if (response.orders().isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
 
 }

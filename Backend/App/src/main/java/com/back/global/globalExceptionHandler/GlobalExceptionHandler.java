@@ -15,6 +15,10 @@ import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @ControllerAdvice
 @RequiredArgsConstructor
@@ -48,6 +52,17 @@ public class GlobalExceptionHandler {
                 new RsData<>(
                         "400-1",
                         message
+                ),
+                BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<RsData<Void>> handle(IllegalArgumentException ex) {
+        return new ResponseEntity<>(
+                new RsData<>(
+                        "400-1",
+                        ex.getMessage()
                 ),
                 BAD_REQUEST
         );
