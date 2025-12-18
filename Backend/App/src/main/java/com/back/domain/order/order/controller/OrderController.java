@@ -21,6 +21,18 @@ public class OrderController {
     public ResponseEntity<OrderDto.CreateResponse> createOrder(
             @Valid @RequestBody OrderDto.CreateRequest request) {
 
+        // 주문 최대 수량 100개 제한 (전체 수량 기준)
+        int totalCount = request.items()
+                .stream()
+                .mapToInt(OrderDto.OrderItemRequest::count)
+                .sum();
+
+        if (totalCount <= 0 || totalCount > 100) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new OrderDto.CreateResponse("주문 수량은 1개 이상 100개 이하만 가능합니다."));
+        }
+
         orderService.createOrder(request);
 
         return ResponseEntity.ok(

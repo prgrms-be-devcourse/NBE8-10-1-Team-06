@@ -104,7 +104,19 @@ export default function Home() {
   }, []);
 
   const addToCart = (id: string) => {
-    setCart((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
+    setCart((prev) => {
+      const currentTotal = Object.values(prev).reduce(
+        (acc, curr) => acc + curr,
+        0,
+      );
+
+      if (currentTotal >= 100) {
+        alert("주문 수량은 최대 100개까지 가능합니다.");
+        return prev;
+      }
+
+      return { ...prev, [id]: (prev[id] ?? 0) + 1 };
+    });
   };
 
   const removeFromCart = (id: string) => {
@@ -147,6 +159,11 @@ export default function Home() {
 
   const handleCheckout = async () => {
     if (selectedItems.length === 0) return;
+
+    if (totalCount > 100) {
+      alert("주문 수량은 최대 100개까지 가능합니다.");
+      return;
+    }
 
     if (!orderForm.email || !isValidEmail(orderForm.email)) {
       alert("유효한 이메일 주소를 입력해주세요.");
@@ -213,6 +230,16 @@ export default function Home() {
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
+
+    if (name === "price") {
+      const numeric = parseInt(value, 10);
+      if (!Number.isNaN(numeric) && numeric > 10000000) {
+        alert("품목 제안 금액은 최대 10,000,000원까지 가능합니다.");
+        setFormData((prev) => ({ ...prev, [name]: "10000000" }));
+        return;
+      }
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -645,6 +672,7 @@ export default function Home() {
                   onChange={handleFormChange}
                   required
                   min="0"
+                  max="10000000"
                   step="1"
                   className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring"
                   placeholder="0"

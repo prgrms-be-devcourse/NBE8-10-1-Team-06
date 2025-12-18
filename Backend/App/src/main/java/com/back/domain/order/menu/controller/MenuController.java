@@ -65,6 +65,13 @@ public class MenuController {
     public ResponseEntity<String> createMenu(
             @RequestBody CreateMenuRequestDto req
     ) {
+        // 품목 제안 최대 값 10,000,000원 검증
+        if (req.getPrice() < 0 || req.getPrice() > 10_000_000) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("메뉴 가격은 0원 이상 10,000,000원 이하만 가능합니다.");
+        }
+
         menuService.createMenu(req);
         return ResponseEntity.status(HttpStatus.CREATED).body("생성 완료되었습니다.");
     }
