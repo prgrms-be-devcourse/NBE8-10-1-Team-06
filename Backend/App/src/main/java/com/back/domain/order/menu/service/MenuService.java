@@ -30,15 +30,21 @@ public class MenuService {
         return menuRepository.findById(id);
     }
 
+    //이메일 유효성 검사 성공시 true 아니면 false
     @Transactional
-    public void modify(
+    public boolean modify(
             Menu menu,
             String menuName,
             int menuPrice,
             String imageUrl,
-            String category
+            String category,
+            String email
             ) {
-        menu.modify(menuName, menuPrice, imageUrl, category);
+        if (menu.getEmail().equals(email)) {
+            menu.modify(menuName, menuPrice, imageUrl, category);
+            return true;
+        }
+        else return false;
     }
     public void createMenu(CreateMenuRequestDto req) {
         Menu menu = new Menu(req.getMenuName(),req.getImageURL(),req.getPrice(),req.getCategory(),req.getEmail());
