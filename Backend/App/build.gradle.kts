@@ -34,6 +34,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind")
     runtimeOnly("com.mysql:mysql-connector-j")
     annotationProcessor("org.projectlombok:lombok")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
 
     // 테스트용 의존성
     testImplementation("org.springframework.boot:spring-boot-starter-test")
