@@ -23,6 +23,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 주문 최대 수량 100개 제한 (전체 수량 기준)
+    const totalCount = body.items.reduce(
+      (sum: number, item: any) => sum + (item?.count ?? 0),
+      0
+    );
+    if (totalCount <= 0 || totalCount > 100) {
+      return NextResponse.json(
+        { message: "주문 수량은 1개 이상 100개 이하만 가능합니다." },
+        { status: 400 }
+      );
+    }
+
     // 실제 백엔드 서버로 주문 데이터 전송
     const backendResponse = await fetch("http://localhost:8080/api/order", {
       method: "POST",

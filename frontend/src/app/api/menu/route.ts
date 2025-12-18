@@ -48,6 +48,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 가격 상한 검증 (품목 제안 최대 10,000,000원)
+    if (body.price < 0 || body.price > 10_000_000) {
+      return NextResponse.json(
+        { message: "품목 제안 금액은 0원 이상 10,000,000원 이하만 가능합니다." },
+        { status: 400 }
+      );
+    }
+
     // 실제 백엔드 서버로 데이터 전송
     const backendResponse = await fetch("http://localhost:8080/api/menu", {
       method: "POST",
