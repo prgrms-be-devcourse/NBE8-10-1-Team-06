@@ -68,11 +68,10 @@ public class MenuControllerTest {
                     .andExpect(jsonPath("$[%d].price".formatted(i)).value(menu.getMenuPrice()))
                     .andExpect(jsonPath("$[%d].category".formatted(i)).value(menu.getCategory()));
         }
-
     }
 
     @Test
-    @DisplayName("메뉴 수정")
+    @DisplayName("메뉴 수정, 200-1")
     void t01() throws Exception {
         int menuId = 2;
 
@@ -95,11 +94,42 @@ public class MenuControllerTest {
                 .andExpect(handler().handlerType(MenuController.class))
                 .andExpect(handler().methodName("modifyMenu"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.menu_id").value(2))
-                .andExpect(jsonPath("$.menu_name").value("쿨라임 피지오"))
-                .andExpect(jsonPath("$.price").value(3000))
-                .andExpect(jsonPath("$.category").value("피지오"));
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.message").value("메뉴를 수정하였습니다."))
+                .andExpect(jsonPath("$.data.menu_id").value(2))
+                .andExpect(jsonPath("$.data.menu_name").value("쿨라임 피지오"))
+                .andExpect(jsonPath("$.data.price").value(3000))
+                .andExpect(jsonPath("$.data.category").value("피지오"));
 
+
+    }
+
+    @Test
+    @DisplayName("메뉴 수정, 404-1")
+    void t02() throws Exception {
+        int menuId = Integer.MAX_VALUE;
+
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/api/menu/modify/" + menuId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                {
+                                    "menu_name": "쿨라임 피지오",
+                                    "price": 3000,
+                                    "img_url": "testImgUrl",
+                                    "category": "피지오"
+                                }
+                                """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(MenuController.class))
+                .andExpect(handler().methodName("modifyMenu"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.resultCode").value("404-1"))
+                .andExpect(jsonPath("$.message").value("해당 데이터가 존재하지 않습니다."));
 
     }
 }

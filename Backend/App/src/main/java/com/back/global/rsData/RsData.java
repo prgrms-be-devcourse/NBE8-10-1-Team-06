@@ -1,16 +1,11 @@
 package com.back.global.rsData;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
-public class RsData<T> {
-    private String resultCode;
-    private String msg;
-    private T data;
-
-    public RsData(String resultCode, String msg) {
-        this(resultCode, msg, null);
+public record RsData<T>(
+        String resultCode,
+        String message,
+        T data
+) {
+    public RsData(String resultCode, String message) {
+        this(resultCode, message, null);
     }
 }
