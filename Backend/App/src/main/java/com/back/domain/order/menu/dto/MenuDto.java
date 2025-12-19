@@ -4,6 +4,7 @@ import com.back.domain.order.menu.entity.Menu;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import org.aspectj.weaver.ast.Not;
 
 
 public class MenuDto {
@@ -42,7 +43,10 @@ public class MenuDto {
             @JsonProperty("img_url")
             String imgUrl,
             @NotBlank(message = "카테고리를 입력하세요.")
-            String category
+            String category,
+            @NotBlank(message = "이메일을 입력하세요.")
+            String email
+
     ) {}
 
     public record MenuModifyResponse(
