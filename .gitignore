@@ -1,0 +1,11 @@
+# 업로드된 이미지 파일
+/uploads/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
