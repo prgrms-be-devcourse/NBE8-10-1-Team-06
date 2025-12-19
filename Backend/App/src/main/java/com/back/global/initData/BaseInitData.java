@@ -34,7 +34,7 @@ public class BaseInitData {
     private final OrderItemRepository orderItemRepository;
 
     @Bean
-    ApplicationRunner baseInitDataApplicationRunner(){
+    ApplicationRunner baseInitDataApplicationRunner() {
         return args -> {
             self.work1();
         };
@@ -44,14 +44,13 @@ public class BaseInitData {
     public void work1() {
         if (customerRepository.count() > 0) return;
 
-        // Menu
-        Menu menu1 = new Menu("아메리카노","tmpImgURL", 4500,"음료","example@example.com");
+        Menu menu1 = new Menu("에티오피아 예가체프", "http://localhost:8080/uploads/Ethiopia-Yirgacheffe.jpg", 15000, "커피원두", "example@example.com");
         menuRepository.save(menu1);
 
-        Menu menu2 = new Menu("카페라떼","tmpImgURL", 5000, "음료","example@example.com");
+        Menu menu2 = new Menu("콜롬비아 수프리모", "http://localhost:8080/uploads/Colombia Supremo.jpg", 18000, "커피원두", "example@example.com");
         menuRepository.save(menu2);
 
-        Menu menu3 = new Menu("카푸치노","tmpImgURL", 5500, "음료","example@example.com");
+        Menu menu3 = new Menu("브라질 산토스", "http://localhost:8080/uploads/Brazil Santos.jpg", 12000, "커피원두", "example@example.com");
         menuRepository.save(menu3);
     }
 
