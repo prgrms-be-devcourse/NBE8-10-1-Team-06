@@ -780,30 +780,13 @@ export default function Home() {
                   <div className="block space-y-2">
                     <span className="text-sm font-medium text-slate-700">이미지</span>
 
-                    <input
-                      type="text"
-                      name="image"
-                      value={formData.image}
-                      onChange={handleFormChange}
-                      disabled={imageFile !== null}
-                      className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-                      placeholder="이미지 URL을 입력하세요"
-                    />
-
-                    <div className="flex items-center gap-2">
-                      <div className="h-px flex-1 bg-slate-200" />
-                      <span className="text-xs text-slate-400">또는</span>
-                      <div className="h-px flex-1 bg-slate-200" />
-                    </div>
-
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <input
                           type="file"
                           accept="image/*"
                           onChange={handleImageChange}
-                          disabled={formData.image !== ""}
-                          className="flex-1 text-sm text-slate-600 file:mr-4 file:rounded-md file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-emerald-700 hover:file:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="flex-1 text-sm text-slate-600 file:mr-4 file:rounded-md file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-emerald-700 hover:file:bg-emerald-100"
                         />
 
                         {imageFile && (
@@ -1055,7 +1038,6 @@ export default function Home() {
                       }
 
                       try {
-                        // ⭐ 이미지 업로드 로직
                         let imageUrl = editForm.image;
                         if (editImageFile) {
                           setUploadingImage(true);
@@ -1221,28 +1203,7 @@ export default function Home() {
                   </label>
 
                   <div className="block space-y-2">
-                    <span className="text-sm font-medium text-slate-700">이미지</span>
-
-                    <input
-                      type="text"
-                      name="image"
-                      value={editForm.image}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({
-                          ...prev,
-                          image: e.target.value,
-                        }))
-                      }
-                      disabled={editImageFile !== null}
-                      className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none ring-emerald-500/60 transition focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-                      placeholder="이미지 URL을 입력하세요"
-                    />
-
-                    <div className="flex items-center gap-2">
-                      <div className="h-px flex-1 bg-slate-200" />
-                      <span className="text-xs text-slate-400">또는</span>
-                      <div className="h-px flex-1 bg-slate-200" />
-                    </div>
+                    <span className="text-sm font-medium text-slate-700">이미지 (선택사항)</span>
 
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
@@ -1250,8 +1211,7 @@ export default function Home() {
                           type="file"
                           accept="image/*"
                           onChange={handleEditImageChange}
-                          disabled={editForm.image !== ""}
-                          className="flex-1 text-sm text-slate-600 file:mr-4 file:rounded-md file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-emerald-700 hover:file:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="flex-1 text-sm text-slate-600 file:mr-4 file:rounded-md file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-emerald-700 hover:file:bg-emerald-100"
                         />
 
                         {editImageFile && (
