@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 import static com.back.domain.order.menu.dto.MenuDto.*;
 
 @Tag(name = "Menu API", description = "메뉴 조회, 생성, 수정, 삭제를 담당하는 API 그룹입니다.")
@@ -66,8 +67,8 @@ public class MenuController {
                 req.imgUrl(),
                 req.category(),
                 req.email()
-                );
-        if(ok){
+        );
+        if (ok) {
             RsData<MenuModifyResponse> rs = new RsData<>(
                     "200-1",
                     "메뉴를 수정하였습니다.",
@@ -75,8 +76,7 @@ public class MenuController {
             );
 
             return ResponseEntity.ok(rs);
-        }
-        else return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } else return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
     }
 
@@ -84,7 +84,7 @@ public class MenuController {
     @PostMapping //추가기능
     @Transactional
     public ResponseEntity<String> createMenu(
-            @RequestBody CreateMenuRequestDto req
+            @Valid @RequestBody CreateMenuRequestDto req
     ) {
         // 품목 제안 최대 값 10,000,000원 검증
         if (req.getPrice() < 0 || req.getPrice() > 10_000_000) {
@@ -111,6 +111,6 @@ public class MenuController {
             return ResponseEntity.status(HttpStatus.OK).body("삭제되었습니다.");
         }
         // validation 실패
-         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("이메일이 잘못되었거나 삭제 권한이 없습니다.");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("이메일이 잘못되었거나 삭제 권한이 없습니다.");
     }
 }
