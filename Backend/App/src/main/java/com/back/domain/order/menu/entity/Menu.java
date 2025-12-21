@@ -1,26 +1,50 @@
 package com.back.domain.order.menu.entity;
 
+import com.back.domain.order.customer.entity.Customer;
 import com.back.global.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "menu")
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public class Menu extends BaseEntity {
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "customer_id")
+    @NotNull
+    private Customer customer;
+
     @NotNull
     String menuName;
-    String imgUrl;
+
     @NotNull
+    String imgUrl;
+
     int menuPrice;
+
     @NotNull
     String category;
-    @NotNull
-    String email;
+
+    public Menu(Customer customer, String menuName, String imgUrl, int menuPrice, String category) {
+        setCustomer(customer);
+        this.menuName = menuName;
+        this.imgUrl = imgUrl;
+        this.menuPrice = menuPrice;
+        this.category = category;
+
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+        if (customer != null && !customer.getMenu().contains(this)) {
+            customer.getMenu().add(this);
+        }
+    }
 
     public void modify(
             String menuName,
@@ -33,4 +57,5 @@ public class Menu extends BaseEntity {
         this.imgUrl = imageUrl;
         this.category = category;
     }
+
 }
