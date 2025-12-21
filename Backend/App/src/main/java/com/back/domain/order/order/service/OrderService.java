@@ -78,8 +78,8 @@ public class OrderService {
             orderMap
                     .computeIfAbsent(order, o -> new ArrayList<>())
                     .add(new OrderDto.OrderItemDTO(
-                            orderItem.getMenu().getMenuName(),
-                            orderItem.getMenu().getMenuPrice(),
+                            orderItem.getMenuNameSnapshot(),
+                            orderItem.getPriceSnapshot(),
                             orderItem.getCount()
                     ));
         }

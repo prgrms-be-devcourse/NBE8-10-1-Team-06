@@ -1,5 +1,6 @@
 package com.back.domain.order.customer.entity;
 
+import com.back.domain.order.menu.entity.Menu;
 import com.back.domain.order.order.entity.Order;
 import com.back.global.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -24,9 +25,13 @@ public class Customer extends BaseEntity {
     @OneToMany(mappedBy = "customer", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
 
+    @OneToMany(mappedBy = "customer", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
+    private List<Menu> menu = new ArrayList<>();
+
     public Customer(String email) {
         this.email = email;
         this.orders = new ArrayList<>();
+        this.menu = new ArrayList<>();
     }
 
 }

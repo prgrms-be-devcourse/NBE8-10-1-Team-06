@@ -45,9 +45,11 @@ public class MenuDto {
             @NotBlank(message = "카테고리를 입력하세요.")
             String category,
             @NotBlank(message = "이메일을 입력하세요.")
+
             String email
 
-    ) {}
+    ) {
+    }
 
     public record MenuModifyResponse(
             @JsonProperty("menu_id")

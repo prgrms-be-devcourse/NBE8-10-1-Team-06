@@ -26,7 +26,10 @@ public class Order extends BaseEntity {
     private LocalDateTime orderTime;
 
     private String address;
+    
     private int postcode;
+    
+    private int totalOrderAmount;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
@@ -36,6 +39,7 @@ public class Order extends BaseEntity {
         this.orderTime = orderTime;
         this.address = address;
         this.postcode = postcode;
+        this.totalOrderAmount = 0;
     }
 
     public void setCustomer(Customer customer) {
@@ -43,5 +47,11 @@ public class Order extends BaseEntity {
         if (customer != null && !customer.getOrders().contains(this)) {
             customer.getOrders().add(this);
         }
+    }
+    
+    public void calculateTotalAmount() {
+        this.totalOrderAmount = orderItems.stream()
+                .mapToInt(item -> item.getPriceSnapshot() * item.getCount())
+                .sum();
     }
 }

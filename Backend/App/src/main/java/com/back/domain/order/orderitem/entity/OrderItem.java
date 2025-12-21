@@ -23,5 +23,20 @@ public class OrderItem extends BaseEntity {
     @JoinColumn(name = "menu_id")
     private Menu menu;
 
+    @Column(length = 100, nullable = false)
+    private String menuNameSnapshot;
+
+    @Column(nullable = false)
+    private int priceSnapshot;
+
+    @Column(nullable = false)
     private int count;
+
+    public OrderItem(Order order, Menu menu, int count) {
+        this.order = order;
+        this.menu = menu;
+        this.menuNameSnapshot = menu.getMenuName();
+        this.priceSnapshot = menu.getMenuPrice();
+        this.count = count;
+    }
 }
