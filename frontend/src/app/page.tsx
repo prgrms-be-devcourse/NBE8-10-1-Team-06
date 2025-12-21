@@ -318,6 +318,10 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+     if (!formData.email || !isValidEmail(formData.email)) {
+        alert("유효한 이메일 주소를 입력해주세요.");
+        return;  // ← 이 줄이 반드시 필요합니다!
+      }
     setIsSubmitting(true);
 
     try {
