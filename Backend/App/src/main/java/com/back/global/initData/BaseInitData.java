@@ -44,13 +44,33 @@ public class BaseInitData {
     public void work1() {
         if (customerRepository.count() > 0) return;
 
-        Menu menu1 = new Menu("에티오피아 예가체프", "http://localhost:8080/uploads/Ethiopia-Yirgacheffe.jpg", 15000, "커피원두", "example@example.com");
+        Customer admin = customerRepository.save(new Customer("example@example.com"));
+
+        Menu menu1 = new Menu(
+                admin,
+                "에티오피아 예가체프",
+                "http://localhost:8080/uploads/Ethiopia-Yirgacheffe.jpg",
+                15000,
+                "커피원두"
+        );
         menuRepository.save(menu1);
 
-        Menu menu2 = new Menu("콜롬비아 수프리모", "http://localhost:8080/uploads/Colombia Supremo.jpg", 18000, "커피원두", "example@example.com");
+        Menu menu2 = new Menu(
+                admin,
+                "콜롬비아 수프리모",
+                "http://localhost:8080/uploads/Colombia Supremo.jpg",
+                18000,
+                "커피원두"
+        );
         menuRepository.save(menu2);
 
-        Menu menu3 = new Menu("브라질 산토스", "http://localhost:8080/uploads/Brazil Santos.jpg", 12000, "커피원두", "example@example.com");
+        Menu menu3 = new Menu(
+                admin,
+                "브라질 산토스",
+                "http://localhost:8080/uploads/Brazil Santos.jpg",
+                12000,
+                "커피원두"
+        );
         menuRepository.save(menu3);
     }
 

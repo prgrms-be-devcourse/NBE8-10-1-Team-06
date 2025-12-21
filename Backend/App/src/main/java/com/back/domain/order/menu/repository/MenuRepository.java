@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MenuRepository extends JpaRepository<Menu, Long> {
 
-    int deleteByIdAndEmail(Long menuId, @NotBlank @Email String email);
+    int deleteByIdAndCustomer_Email(Long menuId, @NotBlank @Email String email);
 }

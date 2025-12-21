@@ -1,6 +1,8 @@
 package com.back.domain.order.menu.service;
 
 
+import com.back.domain.order.customer.entity.Customer;
+import com.back.domain.order.customer.repository.CustomerRepository;
 import com.back.domain.order.menu.dto.CreateMenuRequestDto;
 import com.back.domain.order.menu.dto.DeleteMenuRequestDto;
 import com.back.domain.order.menu.dto.MenuDto;
@@ -21,12 +23,13 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class MenuService {
     private final MenuRepository menuRepository;
+    private final CustomerRepository customerRepository;
 
-    public List<Menu> findAll(){
+    public List<Menu> findAll() {
         return menuRepository.findAll();
     }
 
-    public Optional<Menu> findById(Long id){
+    public Optional<Menu> findById(Long id) {
         return menuRepository.findById(id);
     }
 
@@ -39,21 +42,32 @@ public class MenuService {
             String imageUrl,
             String category,
             String email
-            ) {
-        if (menu.getEmail().equals(email)) {
+    ) {
+        if (menu.getCustomer().getEmail().equals(email)) {
             menu.modify(menuName, menuPrice, imageUrl, category);
             return true;
-        }
-        else return false;
+        } else return false;
     }
+
     public void createMenu(CreateMenuRequestDto req) {
-        Menu menu = new Menu(req.getMenuName(),req.getImageURL(),req.getPrice(),req.getCategory(),req.getEmail());
+        Customer customer = customerRepository.findByEmail(req.getEmail())
+                .orElseGet(() -> customerRepository.save(
+                        new Customer(req.getEmail())
+                ));
+        Menu menu = new Menu(
+                customer,
+                req.getMenuName(),
+                req.getImageURL(),
+                req.getPrice(),
+                req.getCategory()
+        );
+
         menuRepository.save(menu);
     }
 
     // 삭제 성공 시 True, 아니면 False return
     public boolean deleteMenu(DeleteMenuRequestDto req) {
         if (req.getMenuId() == null || req.getEmail() == null) return false;
-        return menuRepository.deleteByIdAndEmail(req.getMenuId(), req.getEmail()) == 1;
+        return menuRepository.deleteByIdAndCustomer_Email(req.getMenuId(), req.getEmail()) == 1;
     }
 }
